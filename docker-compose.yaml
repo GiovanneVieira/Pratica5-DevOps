@@ -1,0 +1,49 @@
+services:
+  app:
+    build: .
+    restart: always
+    container_name: gamificacao_api
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+      - "5005:5005"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./pom.xml
+        - action: sync+restart
+          path: ./src
+          target: /app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      game-app:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: gamificacao_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: devops
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      game-app:
+
+volumes:
+  postgres_data:
+
+networks:
+  game-app:
+    driver: bridge
