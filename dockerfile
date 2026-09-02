@@ -1,35 +1,30 @@
-# --- STAGE 1: Build the application ---
-FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
-
-# Set the working directory inside the container
+# --- STAGE 1: Cache de Dependências (Base) ---
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS dependencies
 WORKDIR /app
-
-# Copy only the pom.xml first to cache dependencies
 COPY pom.xml .
-
-# Download dependencies (this layer is cached unless pom.xml changes)
 RUN mvn dependency:go-offline -B
 
-# Copy the source code
+# --- STAGE 2: Ambiente de Desenvolvimento (Usado pelo Docker Watch) ---
+FROM dependencies AS dev
+WORKDIR /app
 COPY src ./src
+EXPOSE 8080
+# Roda via Maven para recompilar o código a cada reinicialização
+CMD ["mvn", "spring-boot:run"]
 
-# Build the application package (skipping tests for speed)
+# --- STAGE 3: Build do pacote de Produção ---
+FROM dependencies AS builder
+WORKDIR /app
+COPY src ./src
 RUN mvn package
 
-# --- STAGE 2: Run the application ---
-FROM eclipse-temurin:21-jre-alpine
-
-# Create a non-root user for security
+# --- STAGE 4: Imagem final de Produção (Leve e Segura) ---
+FROM eclipse-temurin:21-jre-alpine AS prod
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
 WORKDIR /app
-
-# Copy the compiled JAR from the builder stage
 COPY --from=builder /app/target/*.jar app.jar
-
-# Expose the application port
 EXPOSE 8080
 
-# Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

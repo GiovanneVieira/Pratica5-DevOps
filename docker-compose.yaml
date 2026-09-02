@@ -1,7 +1,8 @@
 services:
   app:
-    build: .
-    restart: always
+    build:
+      context: .
+      target: dev
     container_name: gamificacao_api
     env_file:
       - .env
