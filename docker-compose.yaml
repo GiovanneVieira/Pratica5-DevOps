@@ -28,10 +28,10 @@ services:
     restart: always
     environment:
       POSTGRES_DB: devops
-      POSTGRES_USER: postgres
+      POSTGRES_USER: devops
       POSTGRES_PASSWORD: admin
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
