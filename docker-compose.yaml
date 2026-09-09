@@ -28,7 +28,7 @@ services:
     restart: always
     environment:
       POSTGRES_DB: devops
-      POSTGRES_USER: devops
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
     ports:
       - "5433:5432"
