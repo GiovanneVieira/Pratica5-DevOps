@@ -1,0 +1,38 @@
+FROM node:24-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci # No devDependencies (--only=production is deprecated since npm v9)
+
+FROM node:24-alpine AS dev
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+EXPOSE 5173
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci                    # All dependencies for build
+COPY . .
+RUN npm run build             # Compile TypeScript, bundle, etc.
+
+FROM node:24-alpine AS production
+WORKDIR /app
+
+# Security: Create non-root user to run the application
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Cherry-pick only what's needed from previous stages
+COPY --from=deps /app/node_modules ./node_modules  # Prod deps only
+COPY --from=build /app/dist ./dist                  # Compiled output
+COPY --from=build /app/package.json ./              # For metadata
+
+# Set ownership and switch to non-root user
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+EXPOSE 5173
+CMD ["node", "dist/index.js"]
