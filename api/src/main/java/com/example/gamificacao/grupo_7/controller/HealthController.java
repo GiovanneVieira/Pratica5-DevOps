@@ -18,6 +18,7 @@ public class HealthController {
 
         Map<String, String> response = Map.of("message", "OK");
         return ResponseEntity.ok(response);
+
     }
 
 }

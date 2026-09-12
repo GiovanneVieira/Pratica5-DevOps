@@ -46,7 +46,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: gamificacao_postgres
+    container_name: devops_postgres
     restart: always
     environment:
       POSTGRES_DB: devops

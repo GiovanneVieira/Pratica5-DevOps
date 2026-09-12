@@ -33,5 +33,5 @@ build/
 .vscode/
 
 .env*
-.env.api.example!
-.env.client.exaple!
+!.env.api.example
+!.env.client.example
