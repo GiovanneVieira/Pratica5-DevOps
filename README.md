@@ -100,7 +100,7 @@ git clone git@github.com:GiovanneVieira/Pratica5-DevOps.git
 # 2. Acessar o diretório do projeto:
 cd Pratica5-DevOps
 
-# 3. (Obrigatorio) Criar uma branch para desenvolver
+# 3. (Obrigatório) Criar uma branch para desenvolver:
 git checkout -b nome-da-branch
 ```
 
@@ -286,6 +286,19 @@ O PostgreSQL estará disponível em `localhost:5433` (usuário: `postgres`, senh
 ---
 
 ### Passo 2: Backend (Spring Boot)
+
+> [!TIP]
+> **Dificuldades com o IntelliSense / Autocomplete no IntelliJ IDEA?**
+> Por se tratar de um monorepo com o backend em uma subpasta (`api/`), o IntelliJ IDEA pode não indexar o Maven de imediato, fazendo com que classes, imports ou anotações do Spring fiquem vermelhas ou sem autocompletar.
+> 
+> **Como resolver**:
+> 1. No painel lateral esquerdo (**Project**), localize e expanda a pasta `api`.
+> 2. Clique com o **botão direito** sobre o arquivo `pom.xml`.
+> 3. Clique em **"Add as Maven Project"** (ou se já foi adicionado, selecione **Maven ➔ Reload Project**).
+> 
+> <p align="center">
+>   <img src="docs/images/add_as_maven_project.png" alt="Adicionar como Projeto Maven no IntelliJ" width="400"/>
+> </p>
 
 1. Acesse o diretório `api`:
    ```bash
@@ -547,4 +560,5 @@ Pratica5-DevOps/
 | **A API local não conecta ao banco de dados** | A variável `DATABASE_URL` não está configurada e tenta conectar em `postgres:5432`. | Configure a variável de ambiente: `DATABASE_URL=jdbc:postgresql://localhost:5433/devops`. |
 | **Docker Compose falha com aviso sobre `.env.api` ou `.env.client`** | Os arquivos `.env.api` e `.env.client` ainda não foram criados. | Execute `cp .env.api.example .env.api` e `cp .env.client.example .env.client`. |
 | **Porta 8080 ou 5173 já em uso** | Outro serviço ou aplicação local está rodando nestas portas. | Finalize o processo conflitante ou altere a porta mapeada no `docker-compose.yaml`. |
+| **IntelliSense/imports em vermelho no IntelliJ** | O arquivo `api/pom.xml` não foi importado como projeto Maven. | Clique com o botão direito em `api/pom.xml` e selecione **Add as Maven Project** (ou **Maven ➔ Reload Project**). |
 | **Resetar completamente o banco de dados** | Deseja apagar todas as tabelas e dados armazenados no volume Docker. | Execute `docker compose down -v` e em seguida `docker compose up -d`. |
