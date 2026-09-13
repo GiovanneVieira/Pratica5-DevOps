@@ -13,11 +13,13 @@ Projeto desenvolvido como parte da disciplina de Prática 5 de DevOps. Trata-se 
 - [Visão Geral e Arquitetura](#-visão-geral-e-arquitetura)
 - [Mapeamento de Portas e Serviços](#-mapeamento-de-portas-e-serviços)
 - [Pré-requisitos](#-pré-requisitos)
+- [Como Clonar o Repositório](#-como-clonar-o-repositório)
 - [Configuração de Variáveis de Ambiente](#-configuração-de-variáveis-de-ambiente)
 - [Como Executar e Compilar via Docker](#-como-executar-e-compilar-via-docker-recomendado)
   - [Subindo o Ambiente Completo](#subindo-o-ambiente-completo)
   - [Desenvolvimento com Docker Watch (Hot-Reload)](#desenvolvimento-com-docker-watch-hot-reload)
   - [Compilação Manual das Imagens Docker (Multi-Stage Builds)](#compilação-manual-das-imagens-docker-multi-stage-builds)
+  - [Executando Testes dentro dos Containers Docker](#executando-testes-dentro-dos-containers-docker)
   - [Comandos Úteis do Docker Compose](#comandos-úteis-do-docker-compose)
 - [Como Compilar e Executar Normalmente (Local / Sem Docker)](#-como-compilar-e-executar-normalmente-local--sem-docker)
   - [Passo 1: Subir Apenas o Banco PostgreSQL](#passo-1-subir-apenas-o-banco-postgresql)
@@ -80,6 +82,27 @@ flowchart LR
 - [Node.js](https://nodejs.org/) versão 20 LTS ou 24 LTS e gerenciador `npm`
 - [Maven](https://maven.apache.org/) (opcional, pois o projeto já inclui o Maven Wrapper `mvnw` e `mvnw.cmd`)
 - Uma instância do PostgreSQL ativa (pode ser executada via container)
+- [Git](https://git-scm.com/) instalado no sistema
+
+---
+
+## 📥 Como Clonar o Repositório
+
+Para obter o código-fonte na sua máquina local:
+
+```bash
+# 1. Clonar o repositório via HTTPS:
+git clone https://github.com/GiovanneVieira/Pratica5-DevOps.git
+
+# Ou clonar via SSH (caso possua chaves SSH cadastradas no GitHub):
+git clone git@github.com:GiovanneVieira/Pratica5-DevOps.git
+
+# 2. Acessar o diretório do projeto:
+cd Pratica5-DevOps
+
+# 3. (Recomendado) Alternar para a branch de desenvolvimento / correções:
+git checkout feat/repo-fixes
+```
 
 ---
 
@@ -174,6 +197,55 @@ Tanto o backend quanto o frontend utilizam arquivos Docker multi-estágio (`dock
   ```bash
   docker build -t devops-client:prod --target production ./client
   ```
+
+---
+
+### Executando Testes dentro dos Containers Docker
+
+Você pode executar toda a suíte de testes (testes unitários JUnit e testes BDD com Cucumber) diretamente dentro dos containers Docker, sem precisar de Java ou Node instalados na máquina host:
+
+#### 1. Com os containers em execução (`docker compose exec`)
+
+Se o ambiente já estiver rodando (`docker compose up -d`):
+
+- **Executar todos os testes do Backend (API)**:
+  ```bash
+  docker compose exec api mvn test
+  ```
+
+- **Executar uma classe de testes específica**:
+  ```bash
+  docker compose exec api mvn test -Dtest=ApplicationTests
+  docker compose exec api mvn test -Dtest=AlunoTest
+  ```
+
+- **Executar linter e checagem de tipos do Frontend**:
+  ```bash
+  docker compose exec client npm run lint
+  docker compose exec client npm run build
+  ```
+
+#### 2. Em container temporário sob demanda (`docker compose run`)
+
+Caso o ambiente não esteja rodando, você pode disparar um container efêmero apenas para a execução dos testes:
+
+- **Testes do Backend**:
+  ```bash
+  docker compose run --rm api mvn test
+  ```
+
+- **Linter do Frontend**:
+  ```bash
+  docker compose run --rm client npm run lint
+  ```
+
+#### 3. Testes durante o Build da Imagem (CI / CD)
+
+O estágio `builder` do arquivo `api/dockerfile` executa `mvn package`, o que roda todos os testes automaticamente. Se qualquer teste falhar, o processo de build é interrompido garantindo a integridade da imagem:
+
+```bash
+docker build -t devops-api:builder --target builder ./api
+```
 
 ---
 
