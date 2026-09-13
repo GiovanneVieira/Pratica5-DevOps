@@ -1,4 +1,4 @@
-package com.example.gamificacao.grupo_7.service;
+dpackage com.example.gamificacao.grupo_7.service;
 
 import com.example.gamificacao.grupo_7.model.Aluno;
 import com.example.gamificacao.grupo_7.repository.AlunoRepository;
