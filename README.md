@@ -100,8 +100,8 @@ git clone git@github.com:GiovanneVieira/Pratica5-DevOps.git
 # 2. Acessar o diretório do projeto:
 cd Pratica5-DevOps
 
-# 3. (Recomendado) Alternar para a branch de desenvolvimento / correções:
-git checkout feat/repo-fixes
+# 3. (Obrigatorio) Criar uma branch para desenvolver
+git checkout -b nome-da-branch
 ```
 
 ---
