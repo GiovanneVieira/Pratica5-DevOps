@@ -46,11 +46,11 @@ flowchart LR
         DbContainer[("Container Banco: devops_postgres<br/>PostgreSQL 16 Alpine")]
     end
 
-    ClientBrowser -->|Acessa interface| ClientContainer
-    Curl -->|Chamadas REST| ApiContainer
-    ClientContainer -->|Comunicação com API| ApiContainer
-    ApiContainer -->|Persistência JPA (porta 5432)| DbContainer
-    IDE -->|Conexão Externa (porta mapeada 5433)| DbContainer
+    ClientBrowser -->|"Acessa interface"| ClientContainer
+    Curl -->|"Chamadas REST"| ApiContainer
+    ClientContainer -->|"Comunicação com API"| ApiContainer
+    ApiContainer -->|"Persistência JPA - porta 5432"| DbContainer
+    IDE -->|"Conexão Externa - porta mapeada 5433"| DbContainer
 ```
 
 ---
