@@ -127,13 +127,17 @@ public class AlunoTest {
     /*      Método Auxiliar para criar cursos   */
 
     private List<Curso> criaCursos(Integer quantidade){
+        return criaCursos(quantidade, CursoStatus.INICIADO, 0.0);
+    }
+
+    private List<Curso> criaCursos(Integer quantidade, CursoStatus status, Double notaFinal){
         List<Curso> cursos = new ArrayList<>();
         for (int i = 0; i < quantidade; i++) {
             Curso curso = Curso.builder()
                     .id(UUID.randomUUID())
                     .name("Curso " + (i + 1))
-                    .status(CursoStatus.INICIADO)
-                    .notaFinal(0.0)
+                    .status(status)
+                    .notaFinal(notaFinal)
                     .build();
             cursos.add(curso);
         }
@@ -148,11 +152,7 @@ public class AlunoTest {
     public void alunoComPlanoBasicoAndCursosConcluidosEquals11ConcluirCursoViraPremium(){
 
         Aluno alunoTest = alunoMapper.buildEntity("aluno-test");
-        alunoTest.adicionaCursos(criaCursos(11));
-        alunoTest.getCursos().forEach(curso -> {
-            curso.setNotaFinal(7.5);
-            alunoTest.concluirCurso(curso);
-        });
+        alunoTest.adicionaCursos(criaCursos(11, CursoStatus.CONCLUIDO, 7.5));
 
         Curso curso12 = cursoMapper.buildEntity("curso-teste-12", 7.5);
         alunoTest.adicionaCurso(curso12);
@@ -214,6 +214,41 @@ public class AlunoTest {
         assertEquals(CursoStatus.REPROVADO, curso.getStatus());
         assertEquals(0, aluno.countCursosByStatus(CursoStatus.CONCLUIDO));
 
+    }
+
+    /**
+     * TDD1 - RED / GREEN / BLUE
+     * Cenário 1:
+     * DADO um aluno com assinatura básica ativa
+     * E com menos de 11 cursos concluídos (ex: 5 cursos)
+     * QUANDO o aluno conclui um curso
+     * E obtém nota final superior a 7.0
+     * ENTÃO o sistema deve liberar o acesso a 3 novos cursos
+     * E manter a assinatura no plano básico
+     */
+    @Test
+    public void alunoComAssinaturaBasicaAndMenosDe11CursosConcluidosAoConcluirCursoComNotaSuperiorASeteDeveLiberar3NovosCursosEManterPlanoBasico() {
+        // DADO um aluno com assinatura básica ativa
+        Aluno aluno = alunoMapper.buildEntity("Aluno Teste");
+
+        // E com menos de 11 cursos concluídos (ex: 5 cursos)
+        aluno.adicionaCursos(criaCursos(5, CursoStatus.CONCLUIDO, 8.0));
+
+        assertEquals(5, aluno.countCursosByStatus(CursoStatus.CONCLUIDO));
+        assertEquals(0, aluno.countCursosByStatus(CursoStatus.INICIADO));
+
+        // QUANDO o aluno conclui um curso
+        // E obtém nota final superior a 7.0
+        Curso curso = cursoMapper.buildEntity("Curso 6", 8.0);
+        aluno.adicionaCurso(curso);
+        aluno.concluirCurso(curso);
+
+        // ENTÃO o sistema deve liberar o acesso a 3 novos cursos
+        assertEquals(3, aluno.countCursosByStatus(CursoStatus.INICIADO));
+        assertEquals(9, aluno.getCursos().size());
+
+        // E manter a assinatura no plano básico
+        assertEquals(Plano.BASICO, aluno.getPlano());
     }
 
 }
