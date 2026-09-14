@@ -57,7 +57,6 @@ public class AlunoTest {
         assertEquals(Plano.BASICO, aluno1.getPlano());
     }
 
-
     @Test
     public void novoAlunoDeveTerCursosConcluidosZerados(){
 
@@ -67,12 +66,30 @@ public class AlunoTest {
     }
 
     @Test
+    public void concluirCursoJaConcluidoDeveDarThrowEmIllegalArgumentException(){
+
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        Curso curso = cursoMapper.buildEntity("curso-teste", 7.5);
+        aluno.adicionaCurso(curso);
+        aluno.concluirCurso(curso);
+
+        assertThrows(IllegalArgumentException.class, () -> aluno.concluirCurso(curso));
+
+    }
+
+    @Test
+    public void adicionarCursosVazioOuNullDeveDarThrowEmIllegalArgumentException(){
+
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        assertThrows(IllegalArgumentException.class, () -> aluno.adicionaCurso(null));
+        assertThrows(IllegalArgumentException.class, () -> aluno.adicionaCursos(new ArrayList<>()));
+    }
+
+    @Test
     public void adicionarMoedaParaAlunoNaoPremiumDeveDarThrowEmPlanoInvalidoException(){
 
         Aluno aluno = alunoMapper.buildEntity("aluno-teste");
-        assertThrows(PlanoInvalidoException.class, () -> {
-            aluno.adicionaMoedas(3);
-        });
+        assertThrows(PlanoInvalidoException.class, () -> aluno.adicionaMoedas(3));
     }
 
     @Test
@@ -80,17 +97,13 @@ public class AlunoTest {
         Aluno aluno = alunoMapper.buildEntity("aluno-teste");
         aluno.setPlano(Plano.PREMIUM);
 
-        assertThrows(MoedaInvalidaException.class, () -> {
-            aluno.adicionaMoedas(-3);
-        });
+        assertThrows(MoedaInvalidaException.class, () -> aluno.adicionaMoedas(-3));
     }
 
     @Test
     public void ganharVoucherNullDeveDarThrowEmIllegalArgumentException(){
         Aluno aluno = alunoMapper.buildEntity("aluno-teste");
-        assertThrows(IllegalArgumentException.class, () -> {
-            aluno.ganhaVoucher(null);
-        });
+        assertThrows(IllegalArgumentException.class, () -> aluno.ganhaVoucher(null));
     }
 
     @Test
@@ -102,9 +115,55 @@ public class AlunoTest {
                 "teste",
                 aluno
         );
-        assertThrows(PlanoInvalidoException.class, () -> {
-            aluno.ganhaVoucher(voucher);
-        });
+        assertThrows(PlanoInvalidoException.class, () -> aluno.ganhaVoucher(voucher));
+    }
+
+    @Test
+    public void receberRecompensasDePremiumEmAlunoNaoPremiumDeveDarThrowEmPlanoInvalidoException(){
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        Voucher voucher = voucherMapper.buildEntity(
+                "voucher-teste",
+                10.00,
+                "teste",
+                aluno
+        );
+        assertThrows(PlanoInvalidoException.class, () -> aluno.receberRecompensasDePremium(voucher, criaCursos(3), 3));
+    }
+
+    @Test
+    public void receberRecompensasDePremiumComVoucherNullDeveDarThrowEmIllegalArgumentException(){
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        aluno.setPlano(Plano.PREMIUM);
+
+        assertThrows(IllegalArgumentException.class, () -> aluno.receberRecompensasDePremium(null, criaCursos(3), 3));
+    }
+
+    @Test
+    public void receberRecompensasDePremiumComCursosNullDeveDarThrowEmIllegalArgumentException(){
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        aluno.setPlano(Plano.PREMIUM);
+        Voucher voucher = voucherMapper.buildEntity(
+                "voucher-teste",
+                10.00,
+                "teste",
+                aluno
+        );
+
+        assertThrows(IllegalArgumentException.class, () -> aluno.receberRecompensasDePremium(voucher, null, 3));
+    }
+
+    @Test
+    public void receberRecompensasDePremiumComMoedasNegativasDeveDarThrowEmMoedaInvalidaException(){
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        aluno.setPlano(Plano.PREMIUM);
+        Voucher voucher = voucherMapper.buildEntity(
+                "voucher-teste",
+                10.00,
+                "teste",
+                aluno
+        );
+
+        assertThrows(MoedaInvalidaException.class, () -> aluno.receberRecompensasDePremium(voucher, criaCursos(3), -3));
     }
 
     @Test
@@ -121,12 +180,11 @@ public class AlunoTest {
 
     }
 
+
     @Test
     public void tentarConcluirUmCursoNullDeveDarThrowEmIllegalArgumentException(){
         Aluno aluno = alunoMapper.buildEntity("aluno-teste");
-        assertThrows(IllegalArgumentException.class, () -> {
-            aluno.concluirCurso(null);
-        });
+        assertThrows(IllegalArgumentException.class, () -> aluno.concluirCurso(null));
     }
 
     @Test
@@ -215,7 +273,8 @@ public class AlunoTest {
      *                      TDD2 BLUE
      * Lógica refatorada e implementada para contar os cursos concluidos e liberar o plano premium quando o aluno concluir 12 cursos.
      */
-    @Test
+
+    /*@Test
     public void alunoComPlanoBasicoAndCursosConcluidosEquals11ConcluirCursoViraPremium(){
 
         Aluno alunoTest = alunoMapper.buildEntity("aluno-test");
@@ -249,8 +308,38 @@ public class AlunoTest {
         assertEquals(3, alunoTest.getMoedas());
         assertEquals(3, alunoTest.countCursosByStatus(CursoStatus.INICIADO));
         assertTrue(alunoTest.countVouchers() > 0);
-    }
+    }*/
 
+    @Test
+    public void alunoComPlanoBasicoAndCursosConcluidosEquals11ConcluirCursoViraPremium(){
+
+        Aluno aluno = alunoMapper.buildEntity("aluno-test");
+
+        aluno.adicionaCursos(criaCursos(12));
+        aluno.getCursos().forEach(curso -> {
+            curso.setNotaFinal(7.5);
+            aluno.concluirCurso(curso);
+        });
+
+        aluno.virarPremium();
+
+        Voucher voucherGanho = voucherMapper.buildEntity(
+                "voucher-teste",
+                10.00,
+                "teste",
+                aluno
+        );
+
+        aluno.receberRecompensasDePremium(voucherGanho, criaCursos(3), 3);
+
+        assertEquals(Plano.PREMIUM, aluno.getPlano());
+        assertEquals(12, aluno.countCursosByStatus(CursoStatus.CONCLUIDO));
+        assertEquals(15, aluno.getCursos().size());
+        assertEquals(3, aluno.getMoedas());
+        assertEquals(3, aluno.countCursosByStatus(CursoStatus.INICIADO));
+        assertTrue(aluno.countVouchers() > 0);
+
+    }
 
 
     /** TDD3 GREEN **/

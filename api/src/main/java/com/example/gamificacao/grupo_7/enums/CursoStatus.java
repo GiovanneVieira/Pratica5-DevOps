@@ -8,7 +8,7 @@ public enum CursoStatus {
     REPROVADO("reprovado"),
     CONCLUIDO("concluído");
 
-    private String status;
+    private final String status;
     CursoStatus(String status){
         this.status = status;
     }

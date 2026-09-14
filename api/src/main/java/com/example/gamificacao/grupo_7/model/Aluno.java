@@ -96,10 +96,20 @@ public class Aluno {
 
     /* Método Blue */
     public void adicionaCurso(Curso curso){
+
+        if(curso==null){
+            throw new IllegalArgumentException("O curso não pode ser nulo");
+        }
+
         this.cursos.add(curso);
     }
     /* Método Blue */
     public void adicionaCursos(List<Curso> cursos){
+
+        if(cursos == null || cursos.isEmpty()){
+            throw new IllegalArgumentException("A lista de cursos não pode ser nula ou vazia");
+        }
+
         this.cursos.addAll(cursos);
     }
 
@@ -143,6 +153,19 @@ public class Aluno {
         this.setPlano(Plano.PREMIUM);
     }
 
+    public void receberRecompensasDePremium(Voucher voucher, List<Curso> cursos, Integer moedas){
+
+        if(this.getPlano() == Plano.BASICO){
+            throw new PlanoInvalidoException("O aluno precisa ser premium para receber recompensas");
+        }
+
+        this.adicionaCursos(cursos);
+        this.ganhaVoucher(voucher);
+        this.adicionaMoedas(moedas);
+
+    }
+
+
      /**
      *                      TDD3 - GREEN
      * Conclui um curso. Para a regra atual da história, uma nota final
@@ -169,12 +192,29 @@ public class Aluno {
      * o progresso para o plano Premium.
      * Incluindo tratamento de erros para se caso a nota final seja menor ou igual a 7,0.
      */
-    public void concluirCurso(Curso curso) {
+
+    /*
+        public void concluirCurso(Curso curso) {
         if (curso == null) {
             throw new IllegalArgumentException("O curso não pode ser nulo");
         }
 
         curso.conclui();
+    }*/
+
+    public void concluirCurso(Curso curso) {
+
+        if (curso == null) {
+            throw new IllegalArgumentException("O curso não pode ser nulo");
+        }
+
+        if(curso.getStatus() == CursoStatus.CONCLUIDO){
+            throw new IllegalArgumentException("O curso já foi concluído");
+        }
+
+        curso.conclui();
+
     }
+
 
 }
