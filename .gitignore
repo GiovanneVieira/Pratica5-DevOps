@@ -35,3 +35,6 @@ build/
 .env*
 !.env.api.example
 !.env.client.example
+
+### OTHERS ###
+~$Template_ATDD_Gamificacao.xlsx
