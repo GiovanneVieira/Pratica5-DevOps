@@ -19,10 +19,9 @@ public class Aluno {
     private String name;
 
     private Plano plano;
-    private List<Curso> cursosConcluidos = new ArrayList<>();
     private Integer moedas;
     private List<Voucher> vouchers = new ArrayList<>();
-    private List<Curso> cursosEmAndamento = new ArrayList<>();
+    private List<Curso> cursos = new ArrayList<>();
 
     public Aluno(String name){
         this.id = UUID.randomUUID();
@@ -35,7 +34,7 @@ public class Aluno {
     }
 
     public void adicionaCurso(Curso curso){
-        this.cursosEmAndamento.add(curso);
+        this.cursos.add(curso);
     }
 
     public void concluiCurso(UUID cursoId){
