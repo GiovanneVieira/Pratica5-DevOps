@@ -6,7 +6,6 @@ import lombok.*;
 
 import java.util.UUID;
 
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -21,11 +20,12 @@ public class Curso {
     @Enumerated(value = EnumType.STRING)
     private CursoStatus status;
 
+    private Aluno aluno;
+
     public Curso(String name, Aluno aluno){
         this.id = UUID.randomUUID();
         this.name = name;
+        this.aluno = aluno;
         this.status = CursoStatus.INICIADO;
     }
-
-
 }
