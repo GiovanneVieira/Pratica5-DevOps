@@ -112,8 +112,8 @@ Antes de iniciar os containers ou a compilação, crie os arquivos de ambiente b
 
 ### Linux / macOS / Git Bash:
 ```bash
-cp .env.api.example .env.api
-cp .env.client.example .env.client
+cp .env.api .env.api
+cp .env.client .env.client
 ```
 
 ### Windows (PowerShell):

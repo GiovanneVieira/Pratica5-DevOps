@@ -20,7 +20,6 @@ public class AlunoMapper {
                 .moedas(0)
                 .vouchers(new ArrayList<Voucher>())
                 .cursos(new ArrayList<Curso>())
-                .cursosConcluidos(0)
                 .build();
     }
 

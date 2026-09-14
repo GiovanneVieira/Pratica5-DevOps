@@ -1,7 +1,9 @@
 package com.example.gamificacao.grupo_7.model;
 
+import com.example.gamificacao.grupo_7.enums.VoucherStatus;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -21,6 +23,8 @@ public class Voucher {
 
     private Aluno aluno;
 
-    private Curso curso;
+    private VoucherStatus status;
+
+    private LocalDateTime expiresAt;
 
 }

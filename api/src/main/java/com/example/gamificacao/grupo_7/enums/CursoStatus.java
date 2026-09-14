@@ -5,6 +5,7 @@ import lombok.Getter;
 @Getter
 public enum CursoStatus {
     INICIADO("iniciado"),
+    REPROVADO("reprovado"),
     CONCLUIDO("concluído");
 
     private String status;

@@ -5,7 +5,9 @@ import com.example.gamificacao.grupo_7.enums.Plano;
 import com.example.gamificacao.grupo_7.exception.aluno.NotaFinalNaoSuficienteException;
 import com.example.gamificacao.grupo_7.mapper.AlunoMapper;
 import com.example.gamificacao.grupo_7.mapper.CursoMapper;
+import com.example.gamificacao.grupo_7.mapper.VoucherMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.C;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,10 +27,12 @@ public class AlunoTest {
     private static Aluno alunoCom11CursosConcluidos;
     private final AlunoMapper alunoMapper;
     private final CursoMapper cursoMapper;
+    private final VoucherMapper voucherMapper;
 
     public AlunoTest(){
         this.alunoMapper = new AlunoMapper();
         this.cursoMapper = new CursoMapper();
+        this.voucherMapper = new VoucherMapper();
     }
 
     @BeforeAll
@@ -59,40 +63,49 @@ public class AlunoTest {
 
         Aluno aluno1 = alunoMapper.buildEntity("aluno-teste");
 
-        assertEquals(0, aluno1.getCursosConcluidos());
+        assertEquals(0, aluno1.countCursosByStatus(CursoStatus.CONCLUIDO));
     }
 
     /**
      *                              TDD2 RED
-     *
-    @Test
-    public void alunoComPlanoBasicoAndCursosConcluidosEquals11ConcluirCursoViraPremiumRed(){
+     */
+    /*@Test
+    public void alunoComPlanoBasicoAndCursosConcluidosEquals11ConcluirCursoViraPremiumAndGanhaCursosMoedasAndVoucher(){
 
         Aluno alunoTest = alunoMapper.buildEntity("aluno-test");
 
-        Curso curso = cursoMapper.buildEntity("curso-teste", alunoTest, 7.5);
+        Curso curso = cursoMapper.buildEntity("curso-teste", 7.5);
 
         alunoTest.setCursosConcluidos(11);
 
         alunoTest.concluirCurso(curso, 7.5);
 
         assertEquals(Plano.PREMIUM, alunoTest.getPlano());
+        assertEquals(3, alunoTest.getMoedas());
+        assertFalse(alunoTest.getVouchers().isEmpty());
 
-    }
-    **/
+    }*/
 
-    /**
+
+   /* *
      *                      TDD2 GREEN
-     * Logica inical implementada apenas para o teste dar passar, porem extremamente vulneravel,
+     * Logica inical implementada apenas para o teste dar passar, porem extremamente vulneravel e com erros de relation entre entidades,
      *
     **/
-    /*
-    @Test
-    public void alunoComPlanoBasicoAndCursosConcluidosEquals11ConcluirCursoViraPremiumGreen(){
+    /*@Test
+    public void alunoComPlanoBasicoAndCursosConcluidosEquals11ConcluirCursoViraPremiumAndGanhaCursosMoedasAndVoucher(){
 
         Aluno alunoTest = alunoMapper.buildEntity("aluno-test");
 
-        Curso curso = cursoMapper.buildEntity("curso-teste", alunoTest, 7.5);
+        Curso curso = cursoMapper.buildEntity("curso-teste", 7.5);
+
+        Voucher voucher = voucherMapper.buildEntity(
+                "vouchertest",
+                10.00,
+                "voucher teste",
+                alunoTest,
+                curso
+        );
 
         alunoTest.setCursosConcluidos(11);
 
@@ -100,7 +113,13 @@ public class AlunoTest {
 
         alunoTest.virarPremium();
 
+        alunoTest.adicionaMoedas(3);
+
+        alunoTest.ganhaVoucher(voucher);
+
         assertEquals(Plano.PREMIUM, alunoTest.getPlano());
+        assertEquals(3, alunoTest.getMoedas());
+        assertFalse(alunoTest.getVouchers().isEmpty());
 
     }*/
 
@@ -130,15 +149,35 @@ public class AlunoTest {
 
         Aluno alunoTest = alunoMapper.buildEntity("aluno-test");
         alunoTest.adicionaCursos(criaCursos(11));
-        alunoTest.getCursos().forEach(curso -> alunoTest.concluirCurso(curso, 7.5));
+        alunoTest.getCursos().forEach(curso -> {
+            curso.setNotaFinal(7.5);
+            alunoTest.concluirCurso(curso);
+        });
 
         Curso curso12 = cursoMapper.buildEntity("curso-teste-12", 7.5);
         alunoTest.adicionaCurso(curso12);
-        alunoTest.concluirCurso(curso12, 7.5);
+        alunoTest.concluirCurso(curso12);
         alunoTest.virarPremium();
+        alunoTest.adicionaMoedas(3);
+
+        Voucher voucher = voucherMapper.buildEntity(
+                "voucher-teste",
+                10.00,
+                "teste",
+                alunoTest
+        );
+
+        alunoTest.ganhaVoucher(voucher);
+
+        List<Curso>cursosGanhos = criaCursos(3);
+        alunoTest.adicionaCursos(cursosGanhos);
 
         assertEquals(Plano.PREMIUM, alunoTest.getPlano());
-        assertEquals(12, alunoTest.getCursosConcluidos());
+        assertEquals(12, alunoTest.countCursosByStatus(CursoStatus.CONCLUIDO));
+        assertEquals(15, alunoTest.getCursos().size());
+        assertEquals(3, alunoTest.getMoedas());
+        assertEquals(3, alunoTest.countCursosByStatus(CursoStatus.INICIADO));
+        assertTrue(alunoTest.countVouchers() > 0);
     }
 
 
@@ -163,20 +202,17 @@ public class AlunoTest {
         assertEquals(0, aluno.getProgressoPremium());
     }*/
 
-    /*TDD3 BLUE*/
+    /* TDD3 BLUE */
     @Test
     public void alunoComNotaIgualASeteNaoLiberaCursoAdicionalNemIncrementaPremium() {
 
         Aluno aluno = alunoMapper.buildEntity("Aluno Teste");
 
-        Curso curso = cursoMapper.buildEntity("Curso Teste", 0.0);
-
-        assertThrows(NotaFinalNaoSuficienteException.class, () -> {
-            aluno.concluirCurso(curso, 7.0);
-        });
-
-        assertEquals(CursoStatus.INICIADO, curso.getStatus());
-        assertEquals(0, aluno.getCursosConcluidos());
+        Curso curso = cursoMapper.buildEntity("Curso Teste", 7.0);
+        aluno.adicionaCurso(curso);
+        aluno.concluirCurso(curso);
+        assertEquals(CursoStatus.REPROVADO, curso.getStatus());
+        assertEquals(0, aluno.countCursosByStatus(CursoStatus.CONCLUIDO));
 
     }
 

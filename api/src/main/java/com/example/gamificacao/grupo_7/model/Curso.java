@@ -21,7 +21,11 @@ public class Curso {
     private Double notaFinal;
 
     public void conclui() {
-        this.status = CursoStatus.CONCLUIDO;
+        if (this.notaFinal > 7) {
+            this.setStatus(CursoStatus.CONCLUIDO);
+            return;
+        }
+        this.setStatus(CursoStatus.REPROVADO);
     }
 
 

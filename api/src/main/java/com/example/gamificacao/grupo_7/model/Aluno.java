@@ -4,12 +4,23 @@ import com.example.gamificacao.grupo_7.enums.CursoStatus;
 import com.example.gamificacao.grupo_7.enums.Plano;
 import com.example.gamificacao.grupo_7.exception.aluno.CursosConcluidosInsuficientesException;
 import com.example.gamificacao.grupo_7.exception.aluno.NotaFinalNaoSuficienteException;
+import com.example.gamificacao.grupo_7.exception.aluno.PlanoInvalidoException;
+import com.example.gamificacao.grupo_7.exception.moeda.MoedaNegativaException;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.UUID;
 
+
+/*
+        Classe Entidade Alvo principal para estudo da metodologia de desenvolvimento ATDD, extremamente sobrecarregada com regras de negocios,
+    O que nao é recomendado. De acordo com o padrão MVC, Clean Code e Clean Architecture,
+    a camada de dominio deve ser o mais enxuta possivel, com regras de negocio simples e claras,
+    e a camada de serviço deve ser responsavel por orquestrar as regras de negocio e aplicar as regras de negocio complexas.
+    Apenas foi feito desta maneira para facilitar a visualizacao dos testes unitarios nesta etapa de desenvolvimento
+    Futuramente o Refac certamente acontecerá.
+ */
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,52 +41,106 @@ public class Aluno {
 
     private List<Curso> cursos;
 
-    private int cursosConcluidos;
+//    Atributo para TDD3 Green
+//    private int cursosConcluidos;
+
+    /* Método Green */
+    /*public void ganhaVoucher(Voucher voucher){
+        this.vouchers.add(voucher);
+    }*/
+
+    /* Método Green */
+    /*public void adicionaMoedas(Integer moedas){
+        this.moedas += moedas;
+    }*/
 
 
+    /*
+                                            Método BLUE
+       Adiciona moedas ao aluno, verificando se o aluno é premium e se a quantidade de moedas não é negativa.
+       Utiliza boas praticas como early return/throw e possui tratamento de excecoes
+    */
+    public void adicionaMoedas(Integer moedas){
+
+        if(moedas < 0){
+            throw new MoedaNegativaException("Não é possível adicionar moedas negativas");
+        }
+
+        if(this.getPlano() != Plano.PREMIUM){
+            throw new PlanoInvalidoException("O aluno precisa ser premium para ganhar moedas");
+        }
+
+        this.moedas += moedas;
+    }
+
+    /*
+                                            Método BLUE
+       Adiciona um voucher ao aluno, verificando se o aluno é premium e se o voucher não é nulo.
+       Utiliza boas praticas como early return/throw e possui tratamento de excecoes
+    */
     public void ganhaVoucher(Voucher voucher){
+
+        if(voucher == null){
+            throw new IllegalArgumentException("O voucher não pode ser nulo");
+        }
+
+        if(this.getPlano() != Plano.PREMIUM){
+            throw new PlanoInvalidoException("O aluno precisa ser premium para ganhar vouchers");
+        }
+
         this.vouchers.add(voucher);
     }
 
+    public long countVouchers(){
+        return vouchers.size();
+    }
+
+    /* Método Blue */
     public void adicionaCurso(Curso curso){
         this.cursos.add(curso);
     }
-
+    /* Método Blue */
     public void adicionaCursos(List<Curso> cursos){
         this.cursos.addAll(cursos);
     }
 
     /*
-                                    TTD2 - GREEN
-        Método inicial para alterar o plano do aluno para Premium.
+                                    TDD2 - GREEN
+        Método inicial para alterar o plano do aluno para Premium, vulnervael devido a falta de verificacao das regras de negocio.
     */
-    /* public void virarPremium(){
+     /*public void virarPremium(){
         if(this.getPlano() == Plano.PREMIUM){
-            throw new IllegalStateException("O aluno já é premium");
+            return;
         }
         this.setPlano(Plano.PREMIUM);
     }*/
 
     /*
-        Metodo BLUE para contar os cursos concluidos
+        Metodos BLUE para contar os cursos concluidos ou Iniciados
         Utilizando Stream API para filtrar os cursos com status CONCLUIDO e contar a quantidade.
     */
-    public long getCursosConcluidos(){
+    public long countCursosByStatus(CursoStatus status){
         return this.cursos
                 .stream()
-                .filter(curso -> curso.getStatus() == CursoStatus.CONCLUIDO)
+                .filter(curso -> curso.getStatus() == status)
                 .count();
     }
-
     /*
+        TDD2 - BLUE
         Método BLUE para alterar o plano do aluno para Premium,
         verificando se ele possui cursos concluidos suficientes
         e utilizando boas praticas como early return
     */
     public void virarPremium(){
-        if(this.getCursosConcluidos() < 12){
+
+        if(this.getPlano() == Plano.PREMIUM){
+            return;
+        }
+
+        if(this.countCursosByStatus(CursoStatus.CONCLUIDO) < 12){
             throw new CursosConcluidosInsuficientesException("O aluno não possui cursos concluidos suficientes para virar premium");
         }
+
         this.setPlano(Plano.PREMIUM);
     }
 
@@ -105,22 +170,12 @@ public class Aluno {
      * o progresso para o plano Premium.
      * Incluindo tratamento de erros para se caso a nota final seja menor ou igual a 7,0.
      */
-    public void concluirCurso(Curso curso, double notaFinal) {
+    public void concluirCurso(Curso curso) {
         if (curso == null) {
             throw new IllegalArgumentException("O curso não pode ser nulo");
         }
 
-        if (notaFinal <= 7.0) {
-            throw new NotaFinalNaoSuficienteException("A nota final do curso deve ser maior que 7,0 para liberar curso adicional e incrementar progresso para o plano Premium");
-        }
-
         curso.conclui();
-        cursosConcluidos++;
-
     }
 
-
-    public void adicionaMoedas(Integer moedas){
-        this.moedas += moedas;
-    }
 }
