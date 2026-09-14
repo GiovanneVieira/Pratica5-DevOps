@@ -23,15 +23,4 @@ public class Voucher {
 
     private Curso curso;
 
-    public Voucher(String nome, String descricao, Aluno aluno, Curso curso, Double valor){
-
-        this.id = UUID.randomUUID();
-        this.nome = nome;
-        this.descricao = descricao;
-        this.aluno = aluno;
-        this.curso = curso;
-        this.valor = valor;
-
-    }
-
 }

@@ -5,12 +5,11 @@ import lombok.Getter;
 @Getter
 public enum CursoStatus {
     INICIADO("iniciado"),
-    EM_ANDAMENTO("em andamento"),
     CONCLUIDO("concluído");
 
+    private String status;
     CursoStatus(String status){
         this.status = status;
     }
-    private String status;
 
 }

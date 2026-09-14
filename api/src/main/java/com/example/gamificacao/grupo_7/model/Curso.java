@@ -1,7 +1,6 @@
 package com.example.gamificacao.grupo_7.model;
 
 import com.example.gamificacao.grupo_7.enums.CursoStatus;
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.UUID;
@@ -17,15 +16,13 @@ public class Curso {
 
     private String name;
 
-    @Enumerated(value = EnumType.STRING)
     private CursoStatus status;
 
-    private Aluno aluno;
+    private Double notaFinal;
 
-    public Curso(String name, Aluno aluno){
-        this.id = UUID.randomUUID();
-        this.name = name;
-        this.aluno = aluno;
-        this.status = CursoStatus.INICIADO;
+    public void conclui() {
+        this.status = CursoStatus.CONCLUIDO;
     }
+
+
 }
