@@ -2,7 +2,6 @@ package com.example.gamificacao.grupo_7.mapper;
 
 import com.example.gamificacao.grupo_7.enums.VoucherStatus;
 import com.example.gamificacao.grupo_7.model.Aluno;
-import com.example.gamificacao.grupo_7.model.Curso;
 import com.example.gamificacao.grupo_7.model.Voucher;
 import org.springframework.stereotype.Component;
 

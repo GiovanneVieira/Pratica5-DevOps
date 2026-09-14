@@ -2,12 +2,13 @@ package com.example.gamificacao.grupo_7.model;
 
 import com.example.gamificacao.grupo_7.enums.CursoStatus;
 import com.example.gamificacao.grupo_7.enums.Plano;
-import com.example.gamificacao.grupo_7.exception.aluno.NotaFinalNaoSuficienteException;
+import com.example.gamificacao.grupo_7.exception.aluno.CursosConcluidosInsuficientesException;
+import com.example.gamificacao.grupo_7.exception.aluno.PlanoInvalidoException;
+import com.example.gamificacao.grupo_7.exception.moeda.MoedaInvalidaException;
 import com.example.gamificacao.grupo_7.mapper.AlunoMapper;
 import com.example.gamificacao.grupo_7.mapper.CursoMapper;
 import com.example.gamificacao.grupo_7.mapper.VoucherMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.C;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 public class AlunoTest {
 
-    private static Aluno alunoCom11CursosConcluidos;
     private final AlunoMapper alunoMapper;
     private final CursoMapper cursoMapper;
     private final VoucherMapper voucherMapper;
@@ -64,6 +64,77 @@ public class AlunoTest {
         Aluno aluno1 = alunoMapper.buildEntity("aluno-teste");
 
         assertEquals(0, aluno1.countCursosByStatus(CursoStatus.CONCLUIDO));
+    }
+
+    @Test
+    public void adicionarMoedaParaAlunoNaoPremiumDeveDarThrowEmPlanoInvalidoException(){
+
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        assertThrows(PlanoInvalidoException.class, () -> {
+            aluno.adicionaMoedas(3);
+        });
+    }
+
+    @Test
+    public void moedaInvalidaDeveDarThrowEmMoedaInvalidaException(){
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        aluno.setPlano(Plano.PREMIUM);
+
+        assertThrows(MoedaInvalidaException.class, () -> {
+            aluno.adicionaMoedas(-3);
+        });
+    }
+
+    @Test
+    public void ganharVoucherNullDeveDarThrowEmIllegalArgumentException(){
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        assertThrows(IllegalArgumentException.class, () -> {
+            aluno.ganhaVoucher(null);
+        });
+    }
+
+    @Test
+    public void ganharVoucherEmAlunoNaoPremiumDeveDarThrowEmPlanoInvalidoException(){
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        Voucher voucher = voucherMapper.buildEntity(
+                "voucher-teste",
+                10.00,
+                "teste",
+                aluno
+        );
+        assertThrows(PlanoInvalidoException.class, () -> {
+            aluno.ganhaVoucher(voucher);
+        });
+    }
+
+    @Test
+    public void virarPremiumTendoMenosDe12CursosCompletosDeveDarThrowEmCursosConcluidosInsuficientesException(){
+
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        aluno.adicionaCursos(criaCursos(11));
+        aluno.getCursos().forEach(curso -> {
+            curso.setNotaFinal(7.5);
+            aluno.concluirCurso(curso);
+        });
+
+        assertThrows(CursosConcluidosInsuficientesException.class, aluno::virarPremium);
+
+    }
+
+    @Test
+    public void tentarConcluirUmCursoNullDeveDarThrowEmIllegalArgumentException(){
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        assertThrows(IllegalArgumentException.class, () -> {
+            aluno.concluirCurso(null);
+        });
+    }
+
+    @Test
+    public void alunoPremiumAoTentarVirarPremiumDeveDarThrowEmPlanoInvalidoException(){
+        Aluno aluno = alunoMapper.buildEntity("aluno-teste");
+        aluno.setPlano(Plano.PREMIUM);
+
+        assertThrows(PlanoInvalidoException.class, aluno::virarPremium);
     }
 
     /**

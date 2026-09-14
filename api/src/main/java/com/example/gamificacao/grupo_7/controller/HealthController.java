@@ -1,6 +1,5 @@
 package com.example.gamificacao.grupo_7.controller;
 
-import com.example.gamificacao.grupo_7.model.Aluno;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

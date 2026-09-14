@@ -3,9 +3,8 @@ package com.example.gamificacao.grupo_7.model;
 import com.example.gamificacao.grupo_7.enums.CursoStatus;
 import com.example.gamificacao.grupo_7.enums.Plano;
 import com.example.gamificacao.grupo_7.exception.aluno.CursosConcluidosInsuficientesException;
-import com.example.gamificacao.grupo_7.exception.aluno.NotaFinalNaoSuficienteException;
 import com.example.gamificacao.grupo_7.exception.aluno.PlanoInvalidoException;
-import com.example.gamificacao.grupo_7.exception.moeda.MoedaNegativaException;
+import com.example.gamificacao.grupo_7.exception.moeda.MoedaInvalidaException;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,7 +62,7 @@ public class Aluno {
     public void adicionaMoedas(Integer moedas){
 
         if(moedas < 0){
-            throw new MoedaNegativaException("Não é possível adicionar moedas negativas");
+            throw new MoedaInvalidaException("Não é possível adicionar moedas negativas");
         }
 
         if(this.getPlano() != Plano.PREMIUM){
@@ -134,7 +133,7 @@ public class Aluno {
     public void virarPremium(){
 
         if(this.getPlano() == Plano.PREMIUM){
-            return;
+            throw new PlanoInvalidoException("O aluno ja é premium");
         }
 
         if(this.countCursosByStatus(CursoStatus.CONCLUIDO) < 12){

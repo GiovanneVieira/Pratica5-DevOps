@@ -102,19 +102,35 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
-				<version>3.21.0</version>
-				<configuration>
-					<rulesets>
-						<ruleset>java-basic</ruleset>
-						<ruleset>java-design</ruleset>
-						<ruleset>java-unusedcode</ruleset>
-					</rulesets>
-				</configuration>
+				<version>3.28.0</version>
 				<executions>
 					<execution>
+						<id>pmd-main</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>pmd-test</id>
 						<phase>verify</phase>
 						<goals>
 							<goal>pmd</goal>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<targetDirectory>${project.build.directory}/pmdTest/</targetDirectory>
+							<includeTests>true</includeTests>
+							<excludeRoots>
+								<excludeRoot>${basedir}/src/main/java</excludeRoot>
+							</excludeRoots>
+						</configuration>
+					</execution>
+					<execution>
+						<id>cpd</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>cpd-check</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -125,16 +141,36 @@
 				<version>0.8.15</version>
 				<executions>
 					<execution>
+						<id>default-prepare-agent</id>
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
 					</execution>
 					<execution>
-						<id>report</id>
-						<phase>verify</phase>
+						<id>default-report</id>
 						<goals>
 							<goal>report</goal>
 						</goals>
+					</execution>
+					<execution>
+						<id>default-check</id>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>COMPLEXITY</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.60</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -176,26 +212,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-pmd-plugin</artifactId>
-				<version>3.23.0</version>
-			</plugin>
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<reportSets>
-					<reportSet>
-						<reports>
-							<report>report</report>
-						</reports>
-					</reportSet>
-				</reportSets>
-			</plugin>
-		</plugins>
-	</reporting>
 
 </project>
