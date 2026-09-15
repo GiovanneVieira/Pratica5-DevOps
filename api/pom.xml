@@ -93,8 +93,13 @@
 		</dependency>
 		<dependency>
 			<groupId>com.scalar.maven</groupId>
-			<artifactId>scalar</artifactId>
-			<version>0.1.0</version>
+			<artifactId>scalar-webmvc</artifactId>
+			<version>0.6.66</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>3.1.1</version>
 		</dependency>
 	</dependencies>
 
