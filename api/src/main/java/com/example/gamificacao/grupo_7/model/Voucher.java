@@ -1,10 +1,14 @@
 package com.example.gamificacao.grupo_7.model;
 
 import com.example.gamificacao.grupo_7.enums.VoucherStatus;
+import com.example.gamificacao.grupo_7.model.validation_object.VoucherValue;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -14,26 +18,36 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity(name = "voucher")
+@Table(name = "vouchers")
 public class Voucher {
 
-    @NotNull(message = "O id do voucher não pode ser nulo")
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotBlank(message = "O nome do voucher não pode ser nulo ou vazio")
+    @Column(name = "nome", updatable = false, nullable = false)
     private String nome;
 
-    @NotNull(message = "O valor do voucher não pode ser nulo")
-    @Positive(message = "O valor do voucher deve ser positivo")
-    private Double valor;
+    @Embedded
+    private VoucherValue valor;
 
+    @Column(name = "descricao")
     private String descricao;
 
-    @NotNull(message = "O aluno do voucher não pode ser nulo")
-    private Aluno aluno;
+//    @ManyToOne
+//    private Aluno aluno;
 
-    @NotNull(message = "O status do voucher não pode ser nulo")
+
+    @Enumerated(EnumType.STRING)
     private VoucherStatus status;
 
-    @NotNull(message = "A data de expiração do voucher não pode ser nula")
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
     private LocalDateTime expiresAt;
+
 }

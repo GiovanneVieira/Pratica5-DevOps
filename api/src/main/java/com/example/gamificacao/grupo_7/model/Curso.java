@@ -1,14 +1,20 @@
 package com.example.gamificacao.grupo_7.model;
 
 import com.example.gamificacao.grupo_7.enums.CursoStatus;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity(name = "curso")
+@Table(name = "cursos")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -16,17 +22,23 @@ import java.util.UUID;
 @Builder
 public class Curso {
 
-    @NotNull(message = "O id do curso não pode ser nulo")
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotBlank(message = "O nome do curso não pode ser nulo ou vazio")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @NotNull(message = "O status do curso não pode ser nulo")
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+
+    // Atributos e metodo para testes anteriores realizados (legados por assim dizer)
     private CursoStatus status;
 
-    @NotNull(message = "A nota final do curso não pode ser nula")
-    @PositiveOrZero(message = "A nota final do curso deve ser positiva ou zero")
     private Double notaFinal;
 
     public void conclui() {
@@ -36,6 +48,5 @@ public class Curso {
         }
         this.setStatus(CursoStatus.REPROVADO);
     }
-
-
+    //
 }

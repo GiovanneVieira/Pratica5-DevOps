@@ -1,32 +1,21 @@
 package com.example.gamificacao.grupo_7.model;
 
-import com.example.gamificacao.grupo_7.dto.RecompensasPremiumDTO;
-import com.example.gamificacao.grupo_7.enums.CursoStatus;
 import com.example.gamificacao.grupo_7.enums.Plano;
-import com.example.gamificacao.grupo_7.exception.aluno.CursosConcluidosInsuficientesException;
-import com.example.gamificacao.grupo_7.exception.aluno.PlanoInvalidoException;
-import com.example.gamificacao.grupo_7.exception.moeda.MoedaInvalidaException;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import com.example.gamificacao.grupo_7.model.validation_object.RA;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-
-/*
-        Classe Entidade Alvo principal para estudo da metodologia de desenvolvimento ATDD, extremamente sobrecarregada com regras de negocios,
-    O que nao é recomendado. De acordo com o padrão MVC, Clean Code e Clean Architecture,
-    a camada de dominio deve ser o mais enxuta possivel, com regras de negocio simples e claras,
-    e a camada de serviço deve ser responsavel por orquestrar as regras de negocio e aplicar as regras de negocio complexas.
-    Apenas foi feito desta maneira para facilitar a visualizacao dos testes unitarios nesta etapa de desenvolvimento
-    Futuramente o Refac certamente acontecerá.
- */
 @Slf4j
+@Entity(name = "aluno")
+@Table(name = "alunos")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -34,36 +23,54 @@ import java.util.UUID;
 @Builder
 public class Aluno {
 
-    private static final int QUANTIDADE_CURSOS_BONUS = 3;
-    private static final int LIMITE_CURSOS_UPGRADE_PREMIUM = 11;
-    private static final int CURSOS_NECESSARIOS_PREMIUM = 12;
-
-    @NotNull(message = "O id do aluno não pode ser nulo")
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @NotBlank(message = "O nome do aluno não pode ser nulo ou vazio")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @NotNull(message = "O plano do aluno não pode ser nulo")
+    @Column(name = "email", nullable = false)
+    private String email;
+
+    @Column(name = "password", nullable = false)
+    private String password;
+
+    @Column(name = "ra", nullable = false)
+    @Embedded
+    private RA ra;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "plano", nullable = false)
     private Plano plano;
 
-    @NotNull(message = "A quantidade de moedas do aluno não pode ser nula")
-    @Positive(message = "A quantidade de moedas do aluno deve ser positiva")
+    @Column(name = "moedas")
     private Integer moedas;
 
-    @NotNull(message = "A lista de vouchers do aluno não pode ser nula")
     @Builder.Default
     private List<Voucher> vouchers = new ArrayList<>();
 
-    @NotNull(message = "A lista de cursos do aluno não pode ser nula")
     @Builder.Default
-    private List<Curso> cursos = new ArrayList<>();
+    @JoinColumn(name = "id", referencedColumnName = "id")
+    private List<Matricula> matriculas = new ArrayList<>();
+
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+//    // Atributo mantido apenas para os testes realizados na primeira entrega da Atividade.
+//    private List<Curso> cursos = new ArrayList<>();
+//    private CursosParametros cursosParametros;
 
     // =========================================================================
     // MÉTODOS BÁSICOS DE DOMÍNIO / AUXILIARES
     // =========================================================================
 
-    public void adicionaCurso(Curso curso){
+    /*public void adicionaCurso(Curso curso){
         if(curso == null){
             throw new IllegalArgumentException("O curso não pode ser nulo");
         }
@@ -97,7 +104,7 @@ public class Aluno {
         if (this.cursos == null) {
             this.cursos = new ArrayList<>();
         }
-    }
+    }*/
 
     // =========================================================================
     // TDD1: Liberação de 3 novos cursos ao concluir curso com nota > 7.0
@@ -112,7 +119,7 @@ public class Aluno {
      * - Libera o acesso a 3 novos cursos com status INICIADO.
      * - Mantém o plano como BÁSICO.
      */
-    public void concluirCurso(Curso curso) {
+    /*public void concluirCurso(Curso curso) {
         if (curso == null) {
             throw new IllegalArgumentException("O curso não pode ser nulo");
         }
@@ -127,14 +134,14 @@ public class Aluno {
         curso.conclui();
 
         if (deveLiberarNovosCursos(curso, concluidosAntes)) {
-            liberarNovosCursos(QUANTIDADE_CURSOS_BONUS);
+            liberarNovosCursos(this.cursosParametros.getValor());
         }
     }
 
     private boolean deveLiberarNovosCursos(Curso curso, long concluidosAntes) {
         return curso.getStatus() == CursoStatus.CONCLUIDO
                 && this.plano == Plano.BASICO
-                && concluidosAntes < LIMITE_CURSOS_UPGRADE_PREMIUM;
+                && concluidosAntes < this.cursosParametros.getValor();
     }
 
     private void liberarNovosCursos(int quantidade) {
@@ -148,7 +155,7 @@ public class Aluno {
                     .build();
             this.cursos.add(novoCursoLiberado);
         }
-    }
+    }*/
 
     // =========================================================================
     // TDD2: Upgrade para Plano Premium e Concessão de Recompensas
@@ -182,23 +189,23 @@ public class Aluno {
      * verificando se ele possui cursos concluídos suficientes
      * e utilizando boas práticas como early return.
      */
-    public void virarPremium(){
+    /*public void virarPremium(){
         if(this.getPlano() == Plano.PREMIUM){
             throw new PlanoInvalidoException("O aluno ja é premium");
         }
 
-        if(this.countCursosByStatus(CursoStatus.CONCLUIDO) < CURSOS_NECESSARIOS_PREMIUM){
+        if(this.countCursosByStatus(CursoStatus.CONCLUIDO) < this.cursosParametros.getValor()){
             throw new CursosConcluidosInsuficientesException("O aluno não possui cursos concluidos suficientes para virar premium");
         }
 
         this.setPlano(Plano.PREMIUM);
     }
-
+*/
     /**
      * TDD2 - BLUE
      * Adiciona moedas ao aluno, verificando se o aluno é premium e se a quantidade de moedas não é negativa.
      */
-    public void adicionaMoedas(Integer moedas){
+    /*public void adicionaMoedas(Integer moedas){
         if(moedas < 0){
             throw new MoedaInvalidaException("Não é possível adicionar moedas negativas");
         }
@@ -208,13 +215,13 @@ public class Aluno {
         }
 
         this.moedas += moedas;
-    }
+    }*/
 
     /**
      * TDD2 - BLUE
      * Adiciona um voucher ao aluno, verificando se o aluno é premium e se o voucher não é nulo.
      */
-    public void ganhaVoucher(Voucher voucher){
+    /*public void ganhaVoucher(Voucher voucher){
         if(voucher == null){
             throw new IllegalArgumentException("O voucher não pode ser nulo");
         }
@@ -224,13 +231,13 @@ public class Aluno {
         }
 
         this.vouchers.add(voucher);
-    }
+    }*/
 
     /**
      * TDD2 - BLUE
      * Entrega o pacote de recompensas premium através do RecompensasPremiumDTO validado.
      */
-    public void receberRecompensasDePremium(@Valid RecompensasPremiumDTO recompensasPremiumDTO){
+    /*public void receberRecompensasDePremium(@Valid RecompensasPremiumDTO recompensasPremiumDTO){
         if(recompensasPremiumDTO == null){
             throw new IllegalArgumentException("As recompensas não podem ser nulas");
         }
@@ -254,7 +261,7 @@ public class Aluno {
         this.adicionaCursos(recompensasPremiumDTO.cursos());
         this.ganhaVoucher(recompensasPremiumDTO.voucher());
         this.adicionaMoedas(recompensasPremiumDTO.moedas());
-    }
+    }*/
 
     // =========================================================================
     // TDD3: Regra de Nota <= 7.0 não libera cursos bônus nem avança status concluído
@@ -288,3 +295,12 @@ public class Aluno {
 
 
 }
+
+/*
+        Classe Entidade Alvo principal para estudo da metodologia de desenvolvimento ATDD, extremamente sobrecarregada com regras de negocios,
+    O que nao é recomendado. De acordo com o padrão MVC, Clean Code e Clean Architecture,
+    a camada de dominio deve ser o mais enxuta possivel, com regras de negocio simples e claras,
+    e a camada de serviço deve ser responsavel por orquestrar as regras de negocio e aplicar as regras de negocio complexas.
+    Apenas foi feito desta maneira para facilitar a visualizacao dos testes unitarios nesta etapa de desenvolvimento
+    Futuramente o Refac certamente acontecerá.
+ */
