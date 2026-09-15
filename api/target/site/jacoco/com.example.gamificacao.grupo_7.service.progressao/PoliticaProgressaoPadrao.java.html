@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PoliticaProgressaoPadrao.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.example.gamificacao.grupo_7.service.progressao</a> &gt; <span class="el_source">PoliticaProgressaoPadrao.java</span></div><h1>PoliticaProgressaoPadrao.java</h1><pre class="source lang-java linenums">package com.example.gamificacao.grupo_7.service.progressao;
+
+import com.example.gamificacao.grupo_7.enums.CursoStatus;
+import com.example.gamificacao.grupo_7.enums.CursosParametros;
+import com.example.gamificacao.grupo_7.enums.Plano;
+import org.springframework.stereotype.Component;
+
+@Component
+<span class="fc" id="L9">public class PoliticaProgressaoPadrao implements PoliticaProgressao {</span>
+
+    @Override
+    public ResultadoProgressao avaliar(CursoStatus statusAposConclusao, Plano planoAluno, long cursosConcluidosAntes) {
+        // BDD3: nota &lt;= 7.0 reprova o curso: nada e liberado e o progresso nao avanca
+<span class="fc bfc" id="L14" title="All 2 branches covered.">        if (statusAposConclusao != CursoStatus.CONCLUIDO) {</span>
+<span class="fc" id="L15">            return ResultadoProgressao.REPROVADO_SEM_PROGRESSO;</span>
+        }
+
+        // As recompensas da planilha se aplicam apenas ao plano Basico
+<span class="fc bfc" id="L19" title="All 2 branches covered.">        if (planoAluno != Plano.BASICO) {</span>
+<span class="fc" id="L20">            return ResultadoProgressao.SEM_RECOMPENSA;</span>
+        }
+
+        // BDD2: concluindo o 12o curso (11 concluidos antes) com nota &gt; 7.0
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        if (cursosConcluidosAntes &gt;= CursosParametros.LIMITE_CURSOS_UPGRADE_PREMIUM.getValor()) {</span>
+<span class="fc" id="L25">            return ResultadoProgressao.UPGRADE_PREMIUM;</span>
+        }
+
+        // BDD1: menos de 11 cursos concluidos com nota &gt; 7.0
+<span class="fc" id="L29">        return ResultadoProgressao.CURSO_BONUS_BASICO;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

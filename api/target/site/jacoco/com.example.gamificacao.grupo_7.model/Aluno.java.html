@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Aluno.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.example.gamificacao.grupo_7.model</a> &gt; <span class="el_source">Aluno.java</span></div><h1>Aluno.java</h1><pre class="source lang-java linenums">package com.example.gamificacao.grupo_7.model;
+
+import com.example.gamificacao.grupo_7.enums.CursoStatus;
+import com.example.gamificacao.grupo_7.enums.Plano;
+import com.example.gamificacao.grupo_7.exception.aluno.CursosConcluidosInsuficientesException;
+import com.example.gamificacao.grupo_7.exception.aluno.NotaFinalNaoSuficienteException;
+import com.example.gamificacao.grupo_7.exception.aluno.PlanoInvalidoException;
+import com.example.gamificacao.grupo_7.exception.moeda.MoedaNegativaException;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+
+/*
+        Classe Entidade Alvo principal para estudo da metodologia de desenvolvimento ATDD, extremamente sobrecarregada com regras de negocios,
+    O que nao é recomendado. De acordo com o padrão MVC, Clean Code e Clean Architecture,
+    a camada de dominio deve ser o mais enxuta possivel, com regras de negocio simples e claras,
+    e a camada de serviço deve ser responsavel por orquestrar as regras de negocio e aplicar as regras de negocio complexas.
+    Apenas foi feito desta maneira para facilitar a visualizacao dos testes unitarios nesta etapa de desenvolvimento
+    Futuramente o Refac certamente acontecerá.
+ */
+<span class="fc" id="L25">@Slf4j</span>
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@Builder
+public class Aluno {
+
+    private static final int QUANTIDADE_CURSOS_BONUS = 3;
+    private static final int LIMITE_CURSOS_UPGRADE_PREMIUM = 11;
+    private static final int CURSOS_NECESSARIOS_PREMIUM = 12;
+
+    private UUID id;
+
+    private String name;
+
+    private Plano plano;
+
+    private Integer moedas;
+
+    @Builder.Default
+    private List&lt;Voucher&gt; vouchers = new ArrayList&lt;&gt;();
+
+    @Builder.Default
+    private List&lt;Curso&gt; cursos = new ArrayList&lt;&gt;();
+
+//    Atributo para TDD3 Green
+//    private int cursosConcluidos;
+
+    /* Método Green */
+    /*public void ganhaVoucher(Voucher voucher){
+        this.vouchers.add(voucher);
+    }*/
+
+    /* Método Green */
+    /*public void adicionaMoedas(Integer moedas){
+        this.moedas += moedas;
+    }*/
+
+
+    /*
+                                            Método BLUE
+       Adiciona moedas ao aluno, verificando se o aluno é premium e se a quantidade de moedas não é negativa.
+       Utiliza boas praticas como early return/throw e possui tratamento de excecoes
+    */
+    public void adicionaMoedas(Integer moedas){
+
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if(moedas &lt; 0){</span>
+<span class="nc" id="L73">            throw new MoedaNegativaException(&quot;Não é possível adicionar moedas negativas&quot;);</span>
+        }
+
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if(this.getPlano() != Plano.PREMIUM){</span>
+<span class="nc" id="L77">            throw new PlanoInvalidoException(&quot;O aluno precisa ser premium para ganhar moedas&quot;);</span>
+        }
+
+<span class="fc" id="L80">        this.moedas += moedas;</span>
+<span class="fc" id="L81">    }</span>
+
+    /*
+                                            Método BLUE
+       Adiciona um voucher ao aluno, verificando se o aluno é premium e se o voucher não é nulo.
+       Utiliza boas praticas como early return/throw e possui tratamento de excecoes
+    */
+    public void ganhaVoucher(Voucher voucher){
+
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if(voucher == null){</span>
+<span class="nc" id="L91">            throw new IllegalArgumentException(&quot;O voucher não pode ser nulo&quot;);</span>
+        }
+
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if(this.getPlano() != Plano.PREMIUM){</span>
+<span class="nc" id="L95">            throw new PlanoInvalidoException(&quot;O aluno precisa ser premium para ganhar vouchers&quot;);</span>
+        }
+
+<span class="fc" id="L98">        this.vouchers.add(voucher);</span>
+<span class="fc" id="L99">    }</span>
+
+    public long countVouchers(){
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        return this.vouchers != null ? this.vouchers.size() : 0;</span>
+    }
+
+    /* Método Blue */
+    public void adicionaCurso(Curso curso){
+<span class="fc" id="L107">        garantirListaCursosInicializada();</span>
+<span class="fc" id="L108">        this.cursos.add(curso);</span>
+<span class="fc" id="L109">    }</span>
+
+    /* Método Blue */
+    public void adicionaCursos(List&lt;Curso&gt; cursos){
+<span class="fc" id="L113">        garantirListaCursosInicializada();</span>
+<span class="fc" id="L114">        this.cursos.addAll(cursos);</span>
+<span class="fc" id="L115">    }</span>
+
+    /*
+                                    TDD2 - GREEN
+        Método inicial para alterar o plano do aluno para Premium, vulnervael devido a falta de verificacao das regras de negocio.
+    */
+     /*public void virarPremium(){
+        if(this.getPlano() == Plano.PREMIUM){
+            return;
+        }
+        this.setPlano(Plano.PREMIUM);
+    }*/
+
+    /*
+        Metodos BLUE para contar os cursos concluidos ou Iniciados
+        Utilizando Stream API para filtrar os cursos com status CONCLUIDO e contar a quantidade.
+    */
+    public long countCursosByStatus(CursoStatus status){
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if(this.cursos == null){</span>
+<span class="nc" id="L134">            return 0;</span>
+        }
+<span class="fc" id="L136">        return this.cursos</span>
+<span class="fc" id="L137">                .stream()</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">                .filter(curso -&gt; curso.getStatus() == status)</span>
+<span class="fc" id="L139">                .count();</span>
+    }
+
+    /*
+        TDD2 - BLUE
+        Método BLUE para alterar o plano do aluno para Premium,
+        verificando se ele possui cursos concluidos suficientes
+        e utilizando boas praticas como early return
+    */
+    public void virarPremium(){
+
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if(this.getPlano() == Plano.PREMIUM){</span>
+<span class="nc" id="L151">            return;</span>
+        }
+
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">        if(this.countCursosByStatus(CursoStatus.CONCLUIDO) &lt; CURSOS_NECESSARIOS_PREMIUM){</span>
+<span class="nc" id="L155">            throw new CursosConcluidosInsuficientesException(&quot;O aluno não possui cursos concluidos suficientes para virar premium&quot;);</span>
+        }
+
+<span class="fc" id="L158">        this.setPlano(Plano.PREMIUM);</span>
+<span class="fc" id="L159">    }</span>
+
+     /**
+     *                      TDD3 - GREEN
+     * Conclui um curso. Para a regra atual da história, uma nota final
+     * igual ou inferior a 7,0 não libera curso adicional nem incrementa
+     * o progresso para o plano Premium.
+     */
+    /*public void concluirCurso(Curso curso, double notaFinal) {
+        if (curso == null) {
+            throw new IllegalArgumentException(&quot;O curso não pode ser nulo&quot;);
+        }
+
+        curso.setStatus(CursoStatus.CONCLUIDO);
+        cursosConcluidos++;
+
+        if (notaFinal &lt;= 7.0) {
+            return;
+        }
+    }*/
+
+    /**
+     *                      TDD1 - BLUE (REFACTOR)
+     * Conclui um curso e aplica as regras de progressão:
+     * Quando um curso for concluído com nota superior a 7.0 por um aluno com plano BÁSICO
+     * e menos de 11 cursos concluídos:
+     * - Libera o acesso a 3 novos cursos com status INICIADO.
+     * - Mantém o plano como BÁSICO.
+     */
+    public void concluirCurso(Curso curso) {
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        if (curso == null) {</span>
+<span class="nc" id="L190">            throw new IllegalArgumentException(&quot;O curso não pode ser nulo&quot;);</span>
+        }
+
+<span class="fc" id="L193">        garantirListaCursosInicializada();</span>
+
+<span class="fc" id="L195">        long concluidosAntes = this.countCursosByStatus(CursoStatus.CONCLUIDO);</span>
+
+<span class="fc" id="L197">        curso.conclui();</span>
+
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        if (deveLiberarNovosCursos(curso, concluidosAntes)) {</span>
+<span class="fc" id="L200">            liberarNovosCursos(QUANTIDADE_CURSOS_BONUS);</span>
+        }
+<span class="fc" id="L202">    }</span>
+
+    private boolean deveLiberarNovosCursos(Curso curso, long concluidosAntes) {
+<span class="pc bpc" id="L205" title="1 of 6 branches missed.">        return curso.getStatus() == CursoStatus.CONCLUIDO</span>
+                &amp;&amp; this.plano == Plano.BASICO
+                &amp;&amp; concluidosAntes &lt; LIMITE_CURSOS_UPGRADE_PREMIUM;
+    }
+
+    private void liberarNovosCursos(int quantidade) {
+<span class="fc" id="L211">        garantirListaCursosInicializada();</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        for (int i = 0; i &lt; quantidade; i++) {</span>
+<span class="fc" id="L213">            Curso novoCursoLiberado = Curso.builder()</span>
+<span class="fc" id="L214">                    .id(UUID.randomUUID())</span>
+<span class="fc" id="L215">                    .name(&quot;Curso Liberado &quot; + (i + 1))</span>
+<span class="fc" id="L216">                    .status(CursoStatus.INICIADO)</span>
+<span class="fc" id="L217">                    .notaFinal(0.0)</span>
+<span class="fc" id="L218">                    .build();</span>
+<span class="fc" id="L219">            this.cursos.add(novoCursoLiberado);</span>
+        }
+<span class="fc" id="L221">    }</span>
+
+    private void garantirListaCursosInicializada() {
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">        if (this.cursos == null) {</span>
+<span class="nc" id="L225">            this.cursos = new ArrayList&lt;&gt;();</span>
+        }
+<span class="fc" id="L227">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

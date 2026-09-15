@@ -7,7 +7,6 @@ import com.example.gamificacao.grupo_7.model.validation_object.VoucherValue;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Component
 public class VoucherMapper {
@@ -18,10 +17,10 @@ public class VoucherMapper {
                                Aluno aluno
                               ){
         return Voucher.builder()
-                .id(UUID.randomUUID())
                 .nome(name)
                 .valor(new VoucherValue(valor))
                 .descricao(description)
+                .aluno(aluno)
                 .expiresAt(LocalDateTime.now().plusDays(7))
                 .status(VoucherStatus.VALIDO)
                 .build();

@@ -4,12 +4,8 @@ import com.example.gamificacao.grupo_7.dto.aluno.AlunoRequestDTO;
 import com.example.gamificacao.grupo_7.dto.aluno.AlunoResponseDTO;
 import com.example.gamificacao.grupo_7.enums.Plano;
 import com.example.gamificacao.grupo_7.model.Aluno;
-import com.example.gamificacao.grupo_7.model.Curso;
-import com.example.gamificacao.grupo_7.model.Voucher;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.UUID;
 
 @Component
 public class AlunoMapper {
@@ -44,7 +40,7 @@ public class AlunoMapper {
     public AlunoResponseDTO toResponseDTO(Aluno aluno){
         return new AlunoResponseDTO(
                 aluno.getId(),
-                aluno.getEmail(),
+                aluno.getName(),
                 aluno.getRa(),
                 aluno.getPlano()
         );

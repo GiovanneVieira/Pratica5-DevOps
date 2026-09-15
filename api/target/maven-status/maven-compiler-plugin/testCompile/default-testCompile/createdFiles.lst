@@ -1,0 +1,9 @@
+com/example/gamificacao/grupo_7/service/AlunoServiceTest.class
+com/example/gamificacao/grupo_7/service/ConclusaoCursoServiceTest.class
+com/example/gamificacao/grupo_7/service/MatriculaServiceTest.class
+com/example/gamificacao/grupo_7/controller/MatriculaFlowIntegrationTest.class
+com/example/gamificacao/grupo_7/AbstractIntegrationTest.class
+com/example/gamificacao/grupo_7/model/CursoTest.class
+com/example/gamificacao/grupo_7/service/RecompensasServiceTest.class
+com/example/gamificacao/grupo_7/ApplicationTests.class
+com/example/gamificacao/grupo_7/service/progressao/PoliticaProgressaoPadraoTest.class
