@@ -35,8 +35,8 @@ public class AlunoService {
         return this.alunoMapper.toResponseDTO(aluno);
     }
 
-    public AlunoResponseDTO getAlunoByRA(RA ra){
-        var aluno = this.alunoRepository.findByRa(ra).orElseThrow(() -> new AlunoNotFoundException("Aluno com RA " + ra.getRa() + " nao encontrado"));
+    public AlunoResponseDTO getAlunoByRA(String ra){
+        var aluno = this.alunoRepository.findByRa(new RA(ra)).orElseThrow(() -> new AlunoNotFoundException("Aluno com RA " + ra + " nao encontrado"));
         return this.alunoMapper.toResponseDTO(aluno);
     }
 

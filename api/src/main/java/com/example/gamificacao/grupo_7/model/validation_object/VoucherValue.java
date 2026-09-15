@@ -1,8 +1,6 @@
 package com.example.gamificacao.grupo_7.model.validation_object;
 
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +10,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VoucherValue {
+
+    public static final double CENTAVOS_POR_REAL = 100.0;
 
     private Double valorEmCentavos;
 
@@ -25,7 +25,7 @@ public class VoucherValue {
             throw new IllegalArgumentException("O valor do voucher não pode ser negativo");
         }
 
-        return valor * 100;
+        return valor * CENTAVOS_POR_REAL;
 
     }
 

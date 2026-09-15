@@ -202,7 +202,7 @@ Tanto o backend quanto o frontend utilizam arquivos Docker multi-estágio (`dock
 
 ### Executando Testes dentro dos Containers Docker
 
-Você pode executar toda a suíte de testes (testes unitários JUnit e testes BDD com Cucumber) diretamente dentro dos containers Docker, sem precisar de Java ou Node instalados na máquina host:
+Você pode executar toda a suíte de testes (testes unitários JUnit e testes de integração com Testcontainers) diretamente dentro dos containers Docker, sem precisar de Java ou Node instalados na máquina host:
 
 #### 1. Com os containers em execução (`docker compose exec`)
 
@@ -330,7 +330,7 @@ O PostgreSQL estará disponível em `localhost:5433` (usuário: `postgres`, senh
      .\mvnw.cmd clean compile
      ```
 
-4. **Executar os testes automatizados (JUnit & BDD / Cucumber)**:
+4. **Executar os testes automatizados (JUnit)**:
    - Linux/macOS:
      ```bash
      ./mvnw test
@@ -339,7 +339,7 @@ O PostgreSQL estará disponível em `localhost:5433` (usuário: `postgres`, senh
      ```powershell
      .\mvnw.cmd test
      ```
-   *Executa os testes de unidade JUnit e os testes de aceitação BDD com Cucumber (especificados a partir da planilha `Template_ATDD_Gamificacao.xlsx`).*
+   *Executa os testes de unidade JUnit e os testes de integração (que sobem um PostgreSQL efêmero via Testcontainers), cobrindo os cenários BDD especificados na planilha `Template_ATDD_Gamificacao.xlsx`.*
 
 
 5. **Gerar o pacote de produção (JAR)**:
@@ -486,31 +486,99 @@ Verifica se a aplicação está online.
 ---
 
 ### 2. Cadastro de Aluno
-Registra um novo aluno no banco de dados.
+Registra um novo aluno no banco de dados (plano inicial: `BASICO`, 0 moedas).
 - **Método**: `POST`
-- **URL**: `http://localhost:8080/aluno`
+- **URL**: `http://localhost:8080/alunos`
 - **Header**: `Content-Type: application/json`
 - **Body**:
   ```json
   {
-    "name": "João da Silva"
+    "name": "João da Silva",
+    "email": "joao.silva@email.com",
+    "password": "123456"
   }
   ```
 - **Exemplo via cURL**:
   ```bash
-  curl -X POST http://localhost:8080/aluno \
+  curl -X POST http://localhost:8080/alunos \
     -H "Content-Type: application/json" \
-    -d "{\"name\": \"João da Silva\"}"
+    -d "{\"name\": \"João da Silva\", \"email\": \"joao.silva@email.com\", \"password\": \"123456\"}"
   ```
-- **Exemplo via PowerShell**:
-  ```powershell
-  Invoke-RestMethod -Uri "http://localhost:8080/aluno" -Method POST -ContentType "application/json" -Body '{"name": "João da Silva"}'
-  ```
-- **Resposta esperada**:
+- **Resposta esperada** (`201 Created`):
   ```json
   {
     "id": "e4f8a32b-9e0f-48d6-b0ad-5b43a9f5d1e2",
-    "name": "João da Silva"
+    "name": "João da Silva",
+    "ra": {"ra": "2026123"},
+    "plano": "BASICO"
+  }
+  ```
+
+---
+
+### 3. Consulta de Alunos
+- **Por ID**: `GET http://localhost:8080/alunos/{id}`
+- **Por RA**: `GET http://localhost:8080/alunos/ra/{ra}`
+- **Listar todos**: `GET http://localhost:8080/alunos`
+
+---
+
+### 4. Matrícula em Curso
+Matricula um aluno em um curso (curso criado com status `INICIADO`).
+- **Método**: `POST`
+- **URL**: `http://localhost:8080/alunos/{alunoId}/matriculas`
+- **Body**:
+  ```json
+  {
+    "nomeCurso": "DevOps Essentials"
+  }
+  ```
+- **Resposta esperada** (`201 Created`):
+  ```json
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nomeCurso": "DevOps Essentials",
+    "status": "INICIADO",
+    "notaFinal": 0.0
+  }
+  ```
+- **Listar matrículas do aluno**: `GET http://localhost:8080/alunos/{alunoId}/matriculas`
+
+---
+
+### 5. Conclusão de Curso (regras BDD de gamificação)
+Conclui uma matrícula aplicando as regras de progressão da planilha `Template_ATDD_Gamificacao.xlsx`:
+- **BDD1** — aluno básico com menos de 11 cursos concluídos e nota > 7.0: libera 3 novos cursos (`INICIADO`) e mantém o plano `BASICO`;
+- **BDD2** — 12º curso concluído com nota > 7.0: plano vira `PREMIUM` e concede 3 cursos, 3 moedas e voucher para projetos reais;
+- **BDD3** — nota ≤ 7.0: curso fica `REPROVADO`, sem liberar cursos e sem progresso no plano.
+- **Método**: `PATCH`
+- **URL**: `http://localhost:8080/alunos/{alunoId}/matriculas/{matriculaId}/conclusao`
+- **Body**:
+  ```json
+  {
+    "notaFinal": 8.5
+  }
+  ```
+- **Exemplo via cURL**:
+  ```bash
+  curl -X PATCH http://localhost:8080/alunos/{alunoId}/matriculas/{matriculaId}/conclusao \
+    -H "Content-Type: application/json" \
+    -d "{\"notaFinal\": 8.5}"
+  ```
+- **Resposta esperada** (`200 OK`, exemplo do BDD1):
+  ```json
+  {
+    "matriculaId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "nomeCurso": "DevOps Essentials",
+    "status": "CONCLUIDO",
+    "plano": "BASICO",
+    "moedas": 0,
+    "cursosLiberados": [
+      {"id": "...", "nomeCurso": "Curso Liberado 1", "status": "INICIADO", "notaFinal": 0.0},
+      {"id": "...", "nomeCurso": "Curso Liberado 2", "status": "INICIADO", "notaFinal": 0.0},
+      {"id": "...", "nomeCurso": "Curso Liberado 3", "status": "INICIADO", "notaFinal": 0.0}
+    ],
+    "voucher": null
   }
   ```
 
