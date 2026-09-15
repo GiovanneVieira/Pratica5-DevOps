@@ -1,6 +1,6 @@
 package com.example.gamificacao.grupo_7.model;
 
-import com.example.gamificacao.grupo_7.enums.CursoStatus;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -23,6 +23,7 @@ public class Matricula {
     private UUID id;
 
     @ManyToOne
+    @JoinColumn(name = "aluno_id", referencedColumnName = "id", nullable = false)
     private Aluno aluno;
 
     @OneToOne(cascade = CascadeType.ALL)

@@ -48,14 +48,6 @@ public class Aluno {
     @Column(name = "moedas")
     private Integer moedas;
 
-    @Builder.Default
-    private List<Voucher> vouchers = new ArrayList<>();
-
-    @Builder.Default
-    @JoinColumn(name = "id", referencedColumnName = "id")
-    private List<Matricula> matriculas = new ArrayList<>();
-
-
     @CreationTimestamp
     private LocalDateTime createdAt;
 

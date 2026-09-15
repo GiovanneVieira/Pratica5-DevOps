@@ -91,6 +91,11 @@
 			<version>7.34.8</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.scalar.maven</groupId>
+			<artifactId>scalar</artifactId>
+			<version>0.1.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

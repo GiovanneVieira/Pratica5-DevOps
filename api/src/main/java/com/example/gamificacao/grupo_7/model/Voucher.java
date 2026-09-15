@@ -35,8 +35,9 @@ public class Voucher {
     @Column(name = "descricao")
     private String descricao;
 
-//    @ManyToOne
-//    private Aluno aluno;
+    @ManyToOne
+    @JoinColumn(name = "aluno_id", referencedColumnName = "id", nullable = false)
+    private Aluno aluno;
 
 
     @Enumerated(EnumType.STRING)
