@@ -59,8 +59,101 @@ public class Aluno {
     @Builder.Default
     private List<Curso> cursos = new ArrayList<>();
 
-//    Atributo para TDD3 Green
-//    private int cursosConcluidos;
+    // =========================================================================
+    // MÉTODOS BÁSICOS DE DOMÍNIO / AUXILIARES
+    // =========================================================================
+
+    public void adicionaCurso(Curso curso){
+        if(curso == null){
+            throw new IllegalArgumentException("O curso não pode ser nulo");
+        }
+        garantirListaCursosInicializada();
+        this.cursos.add(curso);
+    }
+
+    public void adicionaCursos(List<Curso> cursos){
+        if(cursos == null || cursos.isEmpty()){
+            throw new IllegalArgumentException("A lista de cursos não pode ser nula ou vazia");
+        }
+        garantirListaCursosInicializada();
+        this.cursos.addAll(cursos);
+    }
+
+    public long countCursosByStatus(CursoStatus status){
+        if(this.cursos == null){
+            return 0;
+        }
+        return this.cursos
+                .stream()
+                .filter(curso -> curso.getStatus() == status)
+                .count();
+    }
+
+    public long countVouchers(){
+        return this.vouchers != null ? this.vouchers.size() : 0;
+    }
+
+    private void garantirListaCursosInicializada() {
+        if (this.cursos == null) {
+            this.cursos = new ArrayList<>();
+        }
+    }
+
+    // =========================================================================
+    // TDD1: Liberação de 3 novos cursos ao concluir curso com nota > 7.0
+    // (Cenário: Aluno básico com menos de 11 cursos concluídos)
+    // =========================================================================
+
+    /**
+     * TDD1 - BLUE (REFACTOR)
+     * Conclui um curso e aplica as regras de progressão:
+     * Quando um curso for concluído com nota superior a 7.0 por um aluno com plano BÁSICO
+     * e menos de 11 cursos concluídos:
+     * - Libera o acesso a 3 novos cursos com status INICIADO.
+     * - Mantém o plano como BÁSICO.
+     */
+    public void concluirCurso(Curso curso) {
+        if (curso == null) {
+            throw new IllegalArgumentException("O curso não pode ser nulo");
+        }
+
+        if (curso.getStatus() == CursoStatus.CONCLUIDO){
+            throw new IllegalArgumentException("O curso já foi concluído");
+        }
+
+        garantirListaCursosInicializada();
+        long concluidosAntes = this.countCursosByStatus(CursoStatus.CONCLUIDO);
+
+        curso.conclui();
+
+        if (deveLiberarNovosCursos(curso, concluidosAntes)) {
+            liberarNovosCursos(QUANTIDADE_CURSOS_BONUS);
+        }
+    }
+
+    private boolean deveLiberarNovosCursos(Curso curso, long concluidosAntes) {
+        return curso.getStatus() == CursoStatus.CONCLUIDO
+                && this.plano == Plano.BASICO
+                && concluidosAntes < LIMITE_CURSOS_UPGRADE_PREMIUM;
+    }
+
+    private void liberarNovosCursos(int quantidade) {
+        garantirListaCursosInicializada();
+        for (int i = 0; i < quantidade; i++) {
+            Curso novoCursoLiberado = Curso.builder()
+                    .id(UUID.randomUUID())
+                    .name("Curso Liberado " + (i + 1))
+                    .status(CursoStatus.INICIADO)
+                    .notaFinal(0.0)
+                    .build();
+            this.cursos.add(novoCursoLiberado);
+        }
+    }
+
+    // =========================================================================
+    // TDD2: Upgrade para Plano Premium e Concessão de Recompensas
+    // (Virar premium após 12 cursos concluídos, receber moedas, vouchers e bônus)
+    // =========================================================================
 
     /* Método Green */
     /*public void ganhaVoucher(Voucher voucher){
@@ -72,94 +165,23 @@ public class Aluno {
         this.moedas += moedas;
     }*/
 
-
     /*
-                                            Método BLUE
-       Adiciona moedas ao aluno, verificando se o aluno é premium e se a quantidade de moedas não é negativa.
-       Utiliza boas praticas como early return/throw e possui tratamento de excecoes
-    */
-    public void adicionaMoedas(Integer moedas){
-
-        if(moedas < 0){
-            throw new MoedaInvalidaException("Não é possível adicionar moedas negativas");
-        }
-
-        if(this.getPlano() != Plano.PREMIUM){
-            throw new PlanoInvalidoException("O aluno precisa ser premium para ganhar moedas");
-        }
-
-        this.moedas += moedas;
-    }
-
-    /*
-                                            Método BLUE
-       Adiciona um voucher ao aluno, verificando se o aluno é premium e se o voucher não é nulo.
-       Utiliza boas praticas como early return/throw e possui tratamento de excecoes
-    */
-    public void ganhaVoucher(Voucher voucher){
-
-        if(voucher == null){
-            throw new IllegalArgumentException("O voucher não pode ser nulo");
-        }
-
-        if(this.getPlano() != Plano.PREMIUM){
-            throw new PlanoInvalidoException("O aluno precisa ser premium para ganhar vouchers");
-        }
-
-        this.vouchers.add(voucher);
-    }
-
-    public long countVouchers(){
-        return this.vouchers != null ? this.vouchers.size() : 0;
-    }
-
-    /* Método Blue */
-    public void adicionaCurso(Curso curso){
-        if(curso==null){
-            throw new IllegalArgumentException("O curso não pode ser nulo");
-        }
-        garantirListaCursosInicializada();
-        this.cursos.add(curso);
-    }
-    /* Método Blue */
-    public void adicionaCursos(List<Curso> cursos){
-        if(cursos == null || cursos.isEmpty()){
-            throw new IllegalArgumentException("A lista de cursos não pode ser nula ou vazia");
-        }
-        garantirListaCursosInicializada();
-        this.cursos.addAll(cursos);
-    }
-
-    /*
-                                    TDD2 - GREEN
-        Método inicial para alterar o plano do aluno para Premium, vulnervael devido a falta de verificacao das regras de negocio.
-    */
-     /*public void virarPremium(){
+     * TDD2 - GREEN
+     * Método inicial para alterar o plano do aluno para Premium, vulnerável devido à falta de verificação das regras de negócio.
+     */
+    /*public void virarPremium(){
         if(this.getPlano() == Plano.PREMIUM){
             return;
         }
         this.setPlano(Plano.PREMIUM);
     }*/
 
-    /*
-        Metodos BLUE para contar os cursos concluidos ou Iniciados
-        Utilizando Stream API para filtrar os cursos com status CONCLUIDO e contar a quantidade.
-    */
-    public long countCursosByStatus(CursoStatus status){
-        if(this.cursos == null){
-            return 0;
-        }
-        return this.cursos
-                .stream()
-                .filter(curso -> curso.getStatus() == status)
-                .count();
-    }
-    /*
-        TDD2 - BLUE
-        Método BLUE para alterar o plano do aluno para Premium,
-        verificando se ele possui cursos concluidos suficientes
-        e utilizando boas praticas como early return
-    */
+    /**
+     * TDD2 - BLUE
+     * Método BLUE para alterar o plano do aluno para Premium,
+     * verificando se ele possui cursos concluídos suficientes
+     * e utilizando boas práticas como early return.
+     */
     public void virarPremium(){
         if(this.getPlano() == Plano.PREMIUM){
             throw new PlanoInvalidoException("O aluno ja é premium");
@@ -172,6 +194,42 @@ public class Aluno {
         this.setPlano(Plano.PREMIUM);
     }
 
+    /**
+     * TDD2 - BLUE
+     * Adiciona moedas ao aluno, verificando se o aluno é premium e se a quantidade de moedas não é negativa.
+     */
+    public void adicionaMoedas(Integer moedas){
+        if(moedas < 0){
+            throw new MoedaInvalidaException("Não é possível adicionar moedas negativas");
+        }
+
+        if(this.getPlano() != Plano.PREMIUM){
+            throw new PlanoInvalidoException("O aluno precisa ser premium para ganhar moedas");
+        }
+
+        this.moedas += moedas;
+    }
+
+    /**
+     * TDD2 - BLUE
+     * Adiciona um voucher ao aluno, verificando se o aluno é premium e se o voucher não é nulo.
+     */
+    public void ganhaVoucher(Voucher voucher){
+        if(voucher == null){
+            throw new IllegalArgumentException("O voucher não pode ser nulo");
+        }
+
+        if(this.getPlano() != Plano.PREMIUM){
+            throw new PlanoInvalidoException("O aluno precisa ser premium para ganhar vouchers");
+        }
+
+        this.vouchers.add(voucher);
+    }
+
+    /**
+     * TDD2 - BLUE
+     * Entrega o pacote de recompensas premium através do RecompensasPremiumDTO validado.
+     */
     public void receberRecompensasDePremium(@Valid RecompensasPremiumDTO recompensasPremiumDTO){
         if(recompensasPremiumDTO == null){
             throw new IllegalArgumentException("As recompensas não podem ser nulas");
@@ -198,10 +256,13 @@ public class Aluno {
         this.adicionaMoedas(recompensasPremiumDTO.moedas());
     }
 
+    // =========================================================================
+    // TDD3: Regra de Nota <= 7.0 não libera cursos bônus nem avança status concluído
+    // =========================================================================
 
-     /**
-     *                      TDD3 - GREEN
-     * Conclui um curso. Para a regra atual da história, uma nota final
+    /**
+     * TDD3 - GREEN
+     * Conclui um curso. Para a regra da história, uma nota final
      * igual ou inferior a 7,0 não libera curso adicional nem incrementa
      * o progresso para o plano Premium.
      */
@@ -219,67 +280,11 @@ public class Aluno {
     }*/
 
     /**
-     *                      TDD3 - BLUE
-     * Conclui um curso. Para a regra atual da história, uma nota final
-     * igual ou inferior a 7,0 não libera curso adicional nem incrementa
-     * o progresso para o plano Premium.
-     * Incluindo tratamento de erros para se caso a nota final seja menor ou igual a 7,0.
+     * TDD3 - BLUE
+     * A validação de nota <= 7.0 reprova o curso (curso.conclui()) e
+     * consequentemente não satisfaz deveLiberarNovosCursos, integrando
+     * com sucesso o fluxo seguro de conclusão.
      */
-
-    /*
-        public void concluirCurso(Curso curso) {
-        if (curso == null) {
-            throw new IllegalArgumentException("O curso não pode ser nulo");
-        }
-
-        curso.conclui();
-    }*/
-
-    public void concluirCurso(Curso curso) {
-
-        if (curso == null) {
-            throw new IllegalArgumentException("O curso não pode ser nulo");
-        }
-
-        if(curso.getStatus() == CursoStatus.CONCLUIDO){
-            throw new IllegalArgumentException("O curso já foi concluído");
-        }
-
-        garantirListaCursosInicializada();
-        long concluidosAntes = this.countCursosByStatus(CursoStatus.CONCLUIDO);
-
-        curso.conclui();
-
-        if (deveLiberarNovosCursos(curso, concluidosAntes)) {
-            liberarNovosCursos(QUANTIDADE_CURSOS_BONUS);
-        }
-
-    }
-
-    private boolean deveLiberarNovosCursos(Curso curso, long concluidosAntes) {
-        return curso.getStatus() == CursoStatus.CONCLUIDO
-                && this.plano == Plano.BASICO
-                && concluidosAntes < LIMITE_CURSOS_UPGRADE_PREMIUM;
-    }
-
-    private void liberarNovosCursos(int quantidade) {
-        garantirListaCursosInicializada();
-        for (int i = 0; i < quantidade; i++) {
-            Curso novoCursoLiberado = Curso.builder()
-                    .id(UUID.randomUUID())
-                    .name("Curso Liberado " + (i + 1))
-                    .status(CursoStatus.INICIADO)
-                    .notaFinal(0.0)
-                    .build();
-            this.cursos.add(novoCursoLiberado);
-        }
-    }
-
-    private void garantirListaCursosInicializada() {
-        if (this.cursos == null) {
-            this.cursos = new ArrayList<>();
-        }
-    }
 
 
 }
