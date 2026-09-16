@@ -36,6 +36,7 @@ Projeto desenvolvido como parte da disciplina de Prática 5 de DevOps. Trata-se 
   - [Passo 3: Frontend (React + Vite)](#passo-3-frontend-react--vite)
 - [Como Conectar ao PostgreSQL pelo IntelliJ IDEA](#-como-conectar-ao-postgresql-pelo-intellij-idea)
 - [Endpoints da API e Exemplos de Uso](#-endpoints-da-api-e-exemplos-de-uso)
+  - [Documentação interativa (Swagger UI / OpenAPI)](#8-documentação-interativa-swagger-ui--openapi)
 - [Metodologia ATDD — Passo a Passo dos TDDs](#-metodologia-atdd--passo-a-passo-dos-tdds)
 - [Estrutura de Pastas do Repositório](#-estrutura-de-pastas-do-repositório)
 - [Resolução de Problemas (Troubleshooting)](#-resolução-de-problemas-troubleshooting)
@@ -653,6 +654,17 @@ Retorna os vouchers **persistidos** no banco (do upgrade Premium no 12º curso e
     }
   ]
   ```
+
+---
+
+### 8. Documentação interativa (Swagger UI / OpenAPI)
+
+A API gera automaticamente a documentação de todos os endpoints com **SpringDoc OpenAPI** (`springdoc-openapi-starter-webmvc-ui`). Com o backend em execução:
+
+- **Swagger UI**: [http://localhost:8080/swagger](http://localhost:8080/swagger) — console interativo para explorar todos os endpoints (parâmetros, schemas e códigos de resposta) e testá-los diretamente do navegador, incluindo os fluxos de matrícula/conclusão das regras BDD e o login.
+- **Especificação OpenAPI 3.1 (JSON)**: [http://localhost:8080/docs](http://localhost:8080/docs) — contrato machine-readable da API, importável em clientes como Postman/Insomnia.
+
+Os caminhos são configurados em `api/src/main/resources/application.properties` (`springdoc.swagger-ui.path=/swagger` e `springdoc.api-docs.path=/docs`).
 ---
 
 ## 🧪 Metodologia ATDD — Passo a Passo dos TDDs
