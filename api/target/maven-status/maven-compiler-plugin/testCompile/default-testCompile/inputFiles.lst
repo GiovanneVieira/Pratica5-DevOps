@@ -1,9 +1,13 @@
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/AbstractIntegrationTest.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/ApplicationTests.java
+/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/controller/AlunoFlowIntegrationTest.java
+/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/controller/LoginFlowIntegrationTest.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/controller/MatriculaFlowIntegrationTest.java
+/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/mapper/AlunoMapperTest.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/model/CursoTest.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/service/AlunoServiceTest.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/service/ConclusaoCursoServiceTest.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/service/MatriculaServiceTest.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/service/RecompensasServiceTest.java
+/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/service/VoucherServiceTest.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/test/java/com/example/gamificacao/grupo_7/service/progressao/PoliticaProgressaoPadraoTest.java

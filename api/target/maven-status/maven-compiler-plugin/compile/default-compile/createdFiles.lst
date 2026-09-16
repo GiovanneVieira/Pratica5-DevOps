@@ -7,12 +7,14 @@ com/example/gamificacao/grupo_7/model/Curso.class
 com/example/gamificacao/grupo_7/service/ConclusaoCursoService.class
 com/example/gamificacao/grupo_7/service/AlunoService.class
 com/example/gamificacao/grupo_7/model/Recompensa.class
+com/example/gamificacao/grupo_7/controller/VoucherController.class
 com/example/gamificacao/grupo_7/enums/VoucherStatus.class
 com/example/gamificacao/grupo_7/mapper/MatriculaMapper.class
 com/example/gamificacao/grupo_7/mapper/VoucherMapper.class
 com/example/gamificacao/grupo_7/controller/AlunoController.class
 com/example/gamificacao/grupo_7/exception/GlobalExceptionHandler.class
 com/example/gamificacao/grupo_7/controller/ConclusaoCursoController.class
+com/example/gamificacao/grupo_7/dto/voucher/VoucherResponseDTO.class
 com/example/gamificacao/grupo_7/dto/RecompensasPremiumDTO.class
 com/example/gamificacao/grupo_7/dto/aluno/AlunoRequestDTO.class
 com/example/gamificacao/grupo_7/exception/matricula/CursoJaConcluidoException.class
@@ -20,7 +22,6 @@ com/example/gamificacao/grupo_7/repository/MatriculaRepository.class
 com/example/gamificacao/grupo_7/exception/matricula/MatriculaNotFoundException.class
 com/example/gamificacao/grupo_7/repository/AlunoRepository.class
 com/example/gamificacao/grupo_7/Application.class
-com/example/gamificacao/grupo_7/dto/matricula/VoucherResponseDTO.class
 com/example/gamificacao/grupo_7/model/validation_object/RA.class
 com/example/gamificacao/grupo_7/dto/matricula/MatriculaResponseDTO.class
 com/example/gamificacao/grupo_7/exception/aluno/NotaFinalNaoSuficienteException.class
@@ -38,6 +39,7 @@ com/example/gamificacao/grupo_7/dto/matricula/ConcluirCursoResponseDTO.class
 com/example/gamificacao/grupo_7/service/MatriculaService.class
 com/example/gamificacao/grupo_7/repository/VoucherRepository.class
 com/example/gamificacao/grupo_7/service/progressao/ResultadoProgressao.class
+com/example/gamificacao/grupo_7/service/VoucherService.class
 com/example/gamificacao/grupo_7/model/Matricula.class
 com/example/gamificacao/grupo_7/model/Voucher$VoucherBuilder.class
 com/example/gamificacao/grupo_7/dto/matricula/ConcluirCursoRequestDTO.class

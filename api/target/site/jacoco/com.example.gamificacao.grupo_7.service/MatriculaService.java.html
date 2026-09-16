@@ -3,9 +3,11 @@
 import com.example.gamificacao.grupo_7.dto.matricula.MatriculaRequestDTO;
 import com.example.gamificacao.grupo_7.dto.matricula.MatriculaResponseDTO;
 import com.example.gamificacao.grupo_7.exception.aluno.AlunoNotFoundException;
+import com.example.gamificacao.grupo_7.exception.matricula.MatriculaNotFoundException;
 import com.example.gamificacao.grupo_7.mapper.CursoMapper;
 import com.example.gamificacao.grupo_7.mapper.MatriculaMapper;
 import com.example.gamificacao.grupo_7.model.Aluno;
+import com.example.gamificacao.grupo_7.model.Matricula;
 import com.example.gamificacao.grupo_7.repository.AlunoRepository;
 import com.example.gamificacao.grupo_7.repository.MatriculaRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,23 +32,41 @@ public class MatriculaService {
 
     @Transactional
     public MatriculaResponseDTO matricularAluno(UUID alunoId, MatriculaRequestDTO requestDTO){
-<span class="fc" id="L33">        var aluno = this.buscaAluno(alunoId);</span>
-<span class="fc" id="L34">        var curso = this.cursoMapper.buildEntity(requestDTO.nomeCurso(), 0.0);</span>
-<span class="fc" id="L35">        var matricula = this.matriculaRepository.save(this.matriculaMapper.toEntity(aluno, curso));</span>
-<span class="fc" id="L36">        return this.matriculaMapper.toResponseDTO(matricula);</span>
+<span class="fc" id="L35">        var aluno = this.buscaAluno(alunoId);</span>
+<span class="fc" id="L36">        var curso = this.cursoMapper.buildEntity(requestDTO.nomeCurso(), 0.0);</span>
+<span class="fc" id="L37">        var matricula = this.matriculaRepository.save(this.matriculaMapper.toEntity(aluno, curso));</span>
+<span class="fc" id="L38">        return this.matriculaMapper.toResponseDTO(matricula);</span>
     }
 
     public List&lt;MatriculaResponseDTO&gt; listarMatriculas(UUID alunoId){
-<span class="fc" id="L40">        this.buscaAluno(alunoId);</span>
-<span class="fc" id="L41">        return this.matriculaRepository.findAllByAlunoId(alunoId)</span>
-<span class="fc" id="L42">                .stream()</span>
-<span class="fc" id="L43">                .map(this.matriculaMapper::toResponseDTO)</span>
-<span class="fc" id="L44">                .toList();</span>
+<span class="fc" id="L42">        this.buscaAluno(alunoId);</span>
+<span class="fc" id="L43">        return this.matriculaRepository.findAllByAlunoId(alunoId)</span>
+<span class="fc" id="L44">                .stream()</span>
+<span class="fc" id="L45">                .map(this.matriculaMapper::toResponseDTO)</span>
+<span class="fc" id="L46">                .toList();</span>
     }
 
+    /**
+     * Desistencia de curso: remove a matricula (e o curso associado, via
+     * cascade do @OneToOne) do historico do aluno. Serve tanto para desistir
+     * de um curso em andamento quanto para apagar um concluido/reprovado.
+     */
+    @Transactional
+    public void desistirMatricula(UUID alunoId, UUID matriculaId){
+<span class="fc" id="L56">        this.buscaAluno(alunoId);</span>
+<span class="fc" id="L57">        var matricula = this.buscaMatricula(alunoId, matriculaId);</span>
+<span class="fc" id="L58">        this.matriculaRepository.delete(matricula);</span>
+<span class="fc" id="L59">    }</span>
+
     private Aluno buscaAluno(UUID alunoId){
-<span class="fc" id="L48">        return this.alunoRepository.findById(alunoId)</span>
-<span class="fc" id="L49">                .orElseThrow(() -&gt; new AlunoNotFoundException(&quot;Aluno com id &quot; + alunoId + &quot; nao encontrado&quot;));</span>
+<span class="fc" id="L62">        return this.alunoRepository.findById(alunoId)</span>
+<span class="fc" id="L63">                .orElseThrow(() -&gt; new AlunoNotFoundException(&quot;Aluno com id &quot; + alunoId + &quot; nao encontrado&quot;));</span>
+    }
+
+    private Matricula buscaMatricula(UUID alunoId, UUID matriculaId){
+<span class="fc" id="L67">        return this.matriculaRepository.findByIdAndAlunoId(matriculaId, alunoId)</span>
+<span class="fc" id="L68">                .orElseThrow(() -&gt; new MatriculaNotFoundException(</span>
+                        &quot;Matricula &quot; + matriculaId + &quot; nao encontrada para o aluno &quot; + alunoId));
     }
 
 }

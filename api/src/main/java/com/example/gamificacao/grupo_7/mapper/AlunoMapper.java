@@ -45,7 +45,9 @@ public class AlunoMapper {
                 aluno.getId(),
                 aluno.getName(),
                 aluno.getRa() != null ? aluno.getRa().getRa() : null,
-                aluno.getPlano()
+                aluno.getPlano(),
+                aluno.getMoedas(),
+                aluno.getCursosConcluidos()
         );
     }
 

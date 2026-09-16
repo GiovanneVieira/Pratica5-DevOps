@@ -43,10 +43,28 @@ public class Aluno {
     @Column(name = "moedas")
     private Integer moedas;
 
+    /**
+     * TDD4: progresso oficial do aluno - total de cursos concluidos com nota
+     * superior a 7,0 acumulado na plataforma. E estado persistido do aluno
+     * (nao derivado do historico de matriculas), pois apagar ou desistir de
+     * um curso nao pode reduzir o progresso ja conquistado. Acesso
+     * nullable-safe: linhas criadas antes da coluna carregam NULL.
+     */
+    @Column(name = "cursos_concluidos")
+    private Integer cursosConcluidos = 0;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public int getCursosConcluidos() {
+        return this.cursosConcluidos == null ? 0 : this.cursosConcluidos;
+    }
+
+    public void setCursosConcluidos(Integer cursosConcluidos) {
+        this.cursosConcluidos = cursosConcluidos == null ? 0 : cursosConcluidos;
+    }
 
 }

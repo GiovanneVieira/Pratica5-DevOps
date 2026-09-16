@@ -7,6 +7,7 @@ import com.example.gamificacao.grupo_7.exception.aluno.AlunoNotFoundException;
 import com.example.gamificacao.grupo_7.exception.matricula.CursoJaConcluidoException;
 import com.example.gamificacao.grupo_7.exception.matricula.MatriculaNotFoundException;
 import com.example.gamificacao.grupo_7.mapper.MatriculaMapper;
+import com.example.gamificacao.grupo_7.mapper.VoucherMapper;
 import com.example.gamificacao.grupo_7.model.Aluno;
 import com.example.gamificacao.grupo_7.model.Matricula;
 import com.example.gamificacao.grupo_7.model.Recompensa;
@@ -39,6 +40,7 @@ public class ConclusaoCursoService {
     private final MatriculaRepository matriculaRepository;
     private final AlunoRepository alunoRepository;
     private final MatriculaMapper matriculaMapper;
+    private final VoucherMapper voucherMapper;
     private final PoliticaProgressao politicaProgressao;
     private final RecompensasService recompensasService;
 
@@ -48,18 +50,38 @@ public class ConclusaoCursoService {
         var matricula = this.buscaMatricula(alunoId, matriculaId);
         this.validaCursoNaoConcluido(matricula);
 
-        long concluidosAntes = this.matriculaRepository.countByAlunoIdAndCursoStatus(alunoId, CursoStatus.CONCLUIDO);
+        int concluidosAntes = aluno.getCursosConcluidos();
         this.aplicaNotaFinal(matricula, requestDTO.notaFinal());
+        this.atualizaProgresso(aluno, matricula, concluidosAntes);
 
         var resultado = this.politicaProgressao.avaliar(matricula.getCurso().getStatus(), aluno.getPlano(), concluidosAntes);
         var recompensa = this.concedeRecompensa(aluno, resultado);
 
-        return this.montaResposta(matricula, aluno, recompensa);
+        return this.montaResposta(matricula, aluno, recompensa, resultado);
+    }
+
+    /**
+     * TDD4 (GREEN): o progresso para o plano Premium e estado persistido do
+     * aluno (cursosConcluidos), incrementado a cada conclusao com nota
+     * superior a 7,0. Por ser persistido - e nao derivado da contagem de
+     * matriculas no historico - apagar ou desistir de um curso concluido
+     * nao reduz o progresso ja conquistado:
+     *
+     *   Dado um aluno com cursos concluidos no progresso
+     *   Quando ele apaga um curso do historico
+     *   Entao o progresso acumulado permanece intacto
+     */
+    private void atualizaProgresso(Aluno aluno, Matricula matricula, int concluidosAntes){
+        if (matricula.getCurso().getStatus() == CursoStatus.CONCLUIDO){
+            aluno.setCursosConcluidos(concluidosAntes + 1);
+            this.alunoRepository.save(aluno);
+        }
     }
 
     private Recompensa concedeRecompensa(Aluno aluno, ResultadoProgressao resultado){
         return switch (resultado) {
             case UPGRADE_PREMIUM -> this.recompensasService.concederRecompensasPremium(aluno);
+            case RECOMPENSA_RECURRENTE -> this.recompensasService.concederRecompensasRecorrentes(aluno);
             case CURSO_BONUS_BASICO -> this.recompensasService.liberarCursosBonus(aluno);
             case REPROVADO_SEM_PROGRESSO, SEM_RECOMPENSA -> Recompensa.vazia();
         };
@@ -79,14 +101,14 @@ public class ConclusaoCursoService {
         }
     }
 
-    private ConcluirCursoResponseDTO montaResposta(Matricula matricula, Aluno aluno, Recompensa recompensa){
+    private ConcluirCursoResponseDTO montaResposta(Matricula matricula, Aluno aluno, Recompensa recompensa, ResultadoProgressao resultado){
         var cursosLiberados = recompensa.cursosLiberados()
                 .stream()
                 .map(this.matriculaMapper::toResponseDTO)
                 .toList();
 
         var voucherDTO = recompensa.voucher() != null
-                ? this.matriculaMapper.toVoucherResponseDTO(recompensa.voucher())
+                ? this.voucherMapper.toResponseDTO(recompensa.voucher())
                 : null;
 
         return new ConcluirCursoResponseDTO(
@@ -96,7 +118,9 @@ public class ConclusaoCursoService {
                 aluno.getPlano(),
                 aluno.getMoedas(),
                 cursosLiberados,
-                voucherDTO
+                voucherDTO,
+                resultado == ResultadoProgressao.UPGRADE_PREMIUM,
+                recompensa.moedasConcedidas()
         );
     }
 

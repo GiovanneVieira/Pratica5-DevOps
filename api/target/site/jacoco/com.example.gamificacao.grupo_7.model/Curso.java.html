@@ -31,19 +31,30 @@ public class Curso {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-
-    // Atributos e metodo para testes anteriores realizados (legados por assim dizer)
+    @Enumerated(EnumType.STRING)
     private CursoStatus status;
 
     private Double notaFinal;
 
+    /**
+     * TDD3 - GREEN (transicao de estado compartilhada com TDD1/TDD2):
+     * Regra de nota final derivada do cenario BDD da planilha:
+     *
+     *   Dado um aluno matriculado em um curso da grade
+     *   Quando o aluno conclui o curso e obtem nota final igual ou inferior a 7,0
+     *   Entao nenhum curso adicional deve ser liberado
+     *   E o progresso para o plano Premium nao deve ser incrementado
+     *
+     * A nota exatamente igual a 7,0 reprova (os cenarios TDD1/TDD2 exigem nota
+     * &quot;superior a 7,0&quot; para liberar recompensas). O status resultante alimenta a
+     * PoliticaProgressao, que decide as recompensas de cada cenario.
+     */
     public void conclui() {
-<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (this.notaFinal &gt; 7) {</span>
-<span class="fc" id="L42">            this.setStatus(CursoStatus.CONCLUIDO);</span>
-<span class="fc" id="L43">            return;</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (this.notaFinal &gt; 7) {</span>
+<span class="fc" id="L54">            this.setStatus(CursoStatus.CONCLUIDO);</span>
+<span class="fc" id="L55">            return;</span>
         }
-<span class="fc" id="L45">        this.setStatus(CursoStatus.REPROVADO);</span>
-<span class="fc" id="L46">    }</span>
-    //
+<span class="fc" id="L57">        this.setStatus(CursoStatus.REPROVADO);</span>
+<span class="fc" id="L58">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

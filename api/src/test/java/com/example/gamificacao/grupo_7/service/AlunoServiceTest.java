@@ -64,7 +64,7 @@ public class AlunoServiceTest {
         );
 
         var entity = this.buildAlunoSalvo();
-        var responseEsperada = new AlunoResponseDTO(entity.getId(), "teste", entity.getRa().getRa(), Plano.BASICO);
+        var responseEsperada = new AlunoResponseDTO(entity.getId(), "teste", entity.getRa().getRa(), Plano.BASICO, entity.getMoedas(), entity.getCursosConcluidos());
 
         when(this.alunoRepository.existsByEmail("email@teste.com")).thenReturn(false);
         when(this.alunoMapper.toEntity(request)).thenReturn(entity);
@@ -95,7 +95,7 @@ public class AlunoServiceTest {
     @Test
     void deveBuscarAlunoPorId(){
         var aluno = this.buildAlunoSalvo();
-        var responseEsperada = new AlunoResponseDTO(aluno.getId(), "teste", aluno.getRa().getRa(), Plano.BASICO);
+        var responseEsperada = new AlunoResponseDTO(aluno.getId(), "teste", aluno.getRa().getRa(), Plano.BASICO, aluno.getMoedas(), aluno.getCursosConcluidos());
 
         when(this.alunoRepository.findById(aluno.getId())).thenReturn(Optional.of(aluno));
         when(this.alunoMapper.toResponseDTO(aluno)).thenReturn(responseEsperada);
@@ -118,7 +118,7 @@ public class AlunoServiceTest {
     @Test
     void deveBuscarAlunoPorRA(){
         var aluno = this.buildAlunoSalvo();
-        var responseEsperada = new AlunoResponseDTO(aluno.getId(), "teste", aluno.getRa().getRa(), Plano.BASICO);
+        var responseEsperada = new AlunoResponseDTO(aluno.getId(), "teste", aluno.getRa().getRa(), Plano.BASICO, aluno.getMoedas(), aluno.getCursosConcluidos());
 
         when(this.alunoRepository.findByRa(aluno.getRa())).thenReturn(Optional.of(aluno));
         when(this.alunoMapper.toResponseDTO(aluno)).thenReturn(responseEsperada);
@@ -138,7 +138,7 @@ public class AlunoServiceTest {
     @Test
     void deveListarAlunos(){
         var aluno = this.buildAlunoSalvo();
-        var responseEsperada = new AlunoResponseDTO(aluno.getId(), "teste", aluno.getRa().getRa(), Plano.BASICO);
+        var responseEsperada = new AlunoResponseDTO(aluno.getId(), "teste", aluno.getRa().getRa(), Plano.BASICO, aluno.getMoedas(), aluno.getCursosConcluidos());
 
         when(this.alunoRepository.findAll()).thenReturn(List.of(aluno));
         when(this.alunoMapper.toResponseDTO(aluno)).thenReturn(responseEsperada);
@@ -159,7 +159,7 @@ public class AlunoServiceTest {
     @Test
     void deveFazerLoginComCredenciaisValidas(){
         var aluno = this.buildAlunoSalvo();
-        var responseEsperada = new AlunoResponseDTO(aluno.getId(), "teste", aluno.getRa().getRa(), Plano.BASICO);
+        var responseEsperada = new AlunoResponseDTO(aluno.getId(), "teste", aluno.getRa().getRa(), Plano.BASICO, aluno.getMoedas(), aluno.getCursosConcluidos());
 
         when(this.alunoRepository.findByEmail("email@teste.com")).thenReturn(Optional.of(aluno));
         when(this.passwordEncoder.matches("123456", aluno.getPassword())).thenReturn(true);

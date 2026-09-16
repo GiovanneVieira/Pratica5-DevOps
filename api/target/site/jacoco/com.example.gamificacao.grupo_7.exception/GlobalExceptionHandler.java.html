@@ -2,6 +2,8 @@
 
 import com.example.gamificacao.grupo_7.exception.aluno.AlunoNotFoundException;
 import com.example.gamificacao.grupo_7.exception.aluno.EmailAlreadyExistsException;
+import com.example.gamificacao.grupo_7.exception.login.AuthenticationFailedException;
+import com.example.gamificacao.grupo_7.exception.matricula.MatriculaNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +15,9 @@ import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
-<span class="fc" id="L16">public class GlobalExceptionHandler {</span>
+<span class="fc" id="L18">public class GlobalExceptionHandler {</span>
 
-<span class="nc" id="L18">    public record ErrorResponse(</span>
+<span class="fc" id="L20">    public record ErrorResponse(</span>
             String message,
             HttpStatus status,
             String path,
@@ -24,32 +26,42 @@ import java.util.stream.Collectors;
 
     @ExceptionHandler(AlunoNotFoundException.class)
     public ResponseEntity&lt;ErrorResponse&gt; handleAlunoNotFound(AlunoNotFoundException ex, HttpServletRequest request){
-<span class="nc" id="L27">        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);</span>
+<span class="fc" id="L29">        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);</span>
+    }
+
+    @ExceptionHandler(MatriculaNotFoundException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleMatriculaNotFound(MatriculaNotFoundException ex, HttpServletRequest request){
+<span class="fc" id="L34">        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);</span>
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity&lt;ErrorResponse&gt; handleEmailAlreadyExists(EmailAlreadyExistsException ex, HttpServletRequest request){
-<span class="nc" id="L32">        return buildErrorResponse(ex, HttpStatus.CONFLICT, request);</span>
+<span class="nc" id="L39">        return buildErrorResponse(ex, HttpStatus.CONFLICT, request);</span>
+    }
+
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleAuthenticationFailed(AuthenticationFailedException ex, HttpServletRequest request){
+<span class="fc" id="L44">        return buildErrorResponse(ex, HttpStatus.UNAUTHORIZED, request);</span>
     }
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity&lt;ErrorResponse&gt; handleBusinessException(BusinessException ex, HttpServletRequest request){
-<span class="nc" id="L37">        return buildErrorResponse(ex, HttpStatus.UNPROCESSABLE_ENTITY, request);</span>
+<span class="nc" id="L49">        return buildErrorResponse(ex, HttpStatus.UNPROCESSABLE_ENTITY, request);</span>
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity&lt;ErrorResponse&gt; handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request){
-<span class="nc" id="L42">        String message = ex.getBindingResult().getFieldErrors().stream()</span>
-<span class="nc" id="L43">                .map(error -&gt; error.getField() + &quot;: &quot; + error.getDefaultMessage())</span>
-<span class="nc" id="L44">                .collect(Collectors.joining(&quot;; &quot;));</span>
+<span class="nc" id="L54">        String message = ex.getBindingResult().getFieldErrors().stream()</span>
+<span class="nc" id="L55">                .map(error -&gt; error.getField() + &quot;: &quot; + error.getDefaultMessage())</span>
+<span class="nc" id="L56">                .collect(Collectors.joining(&quot;; &quot;));</span>
 
-<span class="nc" id="L46">        ErrorResponse response = new ErrorResponse(message, HttpStatus.BAD_REQUEST, request.getRequestURI(), LocalDateTime.now());</span>
-<span class="nc" id="L47">        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);</span>
+<span class="nc" id="L58">        ErrorResponse response = new ErrorResponse(message, HttpStatus.BAD_REQUEST, request.getRequestURI(), LocalDateTime.now());</span>
+<span class="nc" id="L59">        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);</span>
     }
 
     private ResponseEntity&lt;ErrorResponse&gt; buildErrorResponse(BusinessException ex, HttpStatus status, HttpServletRequest request){
-<span class="nc" id="L51">        ErrorResponse response = new ErrorResponse(ex.getMessage(), status, request.getRequestURI(), LocalDateTime.now());</span>
-<span class="nc" id="L52">        return ResponseEntity.status(status).body(response);</span>
+<span class="fc" id="L63">        ErrorResponse response = new ErrorResponse(ex.getMessage(), status, request.getRequestURI(), LocalDateTime.now());</span>
+<span class="fc" id="L64">        return ResponseEntity.status(status).body(response);</span>
     }
 
 }

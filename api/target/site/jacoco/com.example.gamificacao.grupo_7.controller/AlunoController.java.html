@@ -43,8 +43,8 @@ public class AlunoController {
 
     @GetMapping(&quot;/ra/{ra}&quot;)
     public ResponseEntity&lt;AlunoResponseDTO&gt; getAlunoByRa(@PathVariable String ra){
-<span class="nc" id="L46">        var aluno = this.alunoService.getAlunoByRA(ra);</span>
-<span class="nc" id="L47">        return ResponseEntity.status(HttpStatus.OK).body(aluno);</span>
+<span class="fc" id="L46">        var aluno = this.alunoService.getAlunoByRA(ra);</span>
+<span class="fc" id="L47">        return ResponseEntity.status(HttpStatus.OK).body(aluno);</span>
     }
 
 }

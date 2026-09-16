@@ -2,16 +2,23 @@
 
 <span class="fc" id="L3">public enum ResultadoProgressao {</span>
 
-    /** BDD3: nota &lt;= 7.0 reprova o curso, sem liberar bonus e sem progresso no plano. */
+    /** TDD3 / BDD3: nota &lt;= 7.0 reprova o curso, sem liberar bonus e sem progresso no plano. */
 <span class="fc" id="L6">    REPROVADO_SEM_PROGRESSO,</span>
 
-    /** BDD1: aluno basico com menos de 11 cursos concluidos e nota &gt; 7.0 recebe 3 cursos bonus. */
+    /** TDD1 / BDD1: aluno basico com menos de 11 cursos concluidos e nota &gt; 7.0 recebe 3 cursos bonus. */
 <span class="fc" id="L9">    CURSO_BONUS_BASICO,</span>
 
-    /** BDD2: 12o curso concluido com nota &gt; 7.0 por aluno basico: upgrade para Premium e recompensas. */
+    /** TDD2 / BDD2: 12o curso concluido com nota &gt; 7.0 por aluno basico: upgrade para Premium e recompensas. */
 <span class="fc" id="L12">    UPGRADE_PREMIUM,</span>
 
-    /** Aluno ja Premium (ou fora das regras da planilha): conclusao sem novas recompensas. */
-<span class="fc" id="L15">    SEM_RECOMPENSA</span>
+    /**
+     * TDD5 / BDD2 recorrente: a cada 12 cursos concluidos com nota &gt; 7.0 o
+     * aluno Premium recebe novamente as recompensas do BDD2: 3 moedas e voucher
+     * (sem novo upgrade de plano e sem cursos bonus).
+     */
+<span class="fc" id="L19">    RECOMPENSA_RECURRENTE,</span>
+
+    /** Aluno Premium fora dos multiplos de 12 (ou fora das regras da planilha): conclusao sem novas recompensas. */
+<span class="fc" id="L22">    SEM_RECOMPENSA</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

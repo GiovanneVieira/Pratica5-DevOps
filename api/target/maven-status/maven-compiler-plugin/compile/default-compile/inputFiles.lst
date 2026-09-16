@@ -3,15 +3,18 @@
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/controller/AlunoController.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/controller/ConclusaoCursoController.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/controller/HealthController.java
+/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/controller/LoginController.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/controller/MatriculaController.java
+/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/controller/VoucherController.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/dto/RecompensasPremiumDTO.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/dto/aluno/AlunoRequestDTO.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/dto/aluno/AlunoResponseDTO.java
+/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/dto/login/LoginRequestDTO.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/dto/matricula/ConcluirCursoRequestDTO.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/dto/matricula/ConcluirCursoResponseDTO.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/dto/matricula/MatriculaRequestDTO.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/dto/matricula/MatriculaResponseDTO.java
-/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/dto/matricula/VoucherResponseDTO.java
+/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/dto/voucher/VoucherResponseDTO.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/enums/CursoStatus.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/enums/CursosParametros.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/enums/Plano.java
@@ -23,6 +26,7 @@
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/exception/aluno/EmailAlreadyExistsException.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/exception/aluno/NotaFinalNaoSuficienteException.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/exception/aluno/PlanoInvalidoException.java
+/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/exception/login/AuthenticationFailedException.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/exception/matricula/CursoJaConcluidoException.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/exception/matricula/MatriculaNotFoundException.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/exception/moeda/MoedaInvalidaException.java
@@ -44,6 +48,7 @@
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/service/ConclusaoCursoService.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/service/MatriculaService.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/service/RecompensasService.java
+/home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/service/VoucherService.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/service/progressao/PoliticaProgressao.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/service/progressao/PoliticaProgressaoPadrao.java
 /home/giovanne/Documentos/DevOps/Pratica5-DevOps/api/src/main/java/com/example/gamificacao/grupo_7/service/progressao/ResultadoProgressao.java

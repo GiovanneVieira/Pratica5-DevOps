@@ -11,6 +11,13 @@ public enum ResultadoProgressao {
     /** TDD2 / BDD2: 12o curso concluido com nota > 7.0 por aluno basico: upgrade para Premium e recompensas. */
     UPGRADE_PREMIUM,
 
-    /** Aluno ja Premium (ou fora das regras da planilha): conclusao sem novas recompensas. */
+    /**
+     * TDD5 / BDD2 recorrente: a cada 12 cursos concluidos com nota > 7.0 o
+     * aluno Premium recebe novamente as recompensas do BDD2: 3 moedas e voucher
+     * (sem novo upgrade de plano e sem cursos bonus).
+     */
+    RECOMPENSA_RECURRENTE,
+
+    /** Aluno Premium fora dos multiplos de 12 (ou fora das regras da planilha): conclusao sem novas recompensas. */
     SEM_RECOMPENSA
 }

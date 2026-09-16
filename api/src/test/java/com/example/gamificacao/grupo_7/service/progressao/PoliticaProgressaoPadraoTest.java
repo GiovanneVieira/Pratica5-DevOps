@@ -87,15 +87,34 @@ public class PoliticaProgressaoPadraoTest {
 
     /**
      * Caso de borda fora da planilha: aluno ja Premium que conclui curso com
-     * nota superior a 7,0 nao recebe novas recompensas (as recompensas dos
-     * cenarios TDD1/TDD2 se aplicam apenas ao plano basico).
+     * nota superior a 7,0 fora dos multiplos de 12 nao recebe novas
+     * recompensas (as recompensas dos cenarios TDD1/TDD2 se aplicam ao plano
+     * basico, e a cada 12 concluidos ao premium - ver TDD5).
      */
     @Test
-    void alunoPremiumAprovadoDeveRetornarSemRecompensa(){
+    void alunoPremiumAprovadoForaDosMultiplosDe12DeveRetornarSemRecompensa(){
         assertEquals(ResultadoProgressao.SEM_RECOMPENSA,
                 this.politica.avaliar(this.statusAposConcluir(9.0), Plano.PREMIUM, 3));
         assertEquals(ResultadoProgressao.SEM_RECOMPENSA,
+                this.politica.avaliar(this.statusAposConcluir(9.0), Plano.PREMIUM, 12));
+    }
+
+    /**
+     * TDD5 - cenario de aceitacao (recorrencia do BDD2):
+     *
+     * Dado um aluno Premium com progresso em um multiplo menos 1 de 12
+     * Quando ele conclui o proximo curso (12o, 24o, 36o...)
+     * E obtem nota final superior a 7,0
+     * Entao deve receber novamente as recompensas do BDD2: 3 moedas e voucher
+     */
+    @Test
+    void tdd5_alunoPremiumAoConcluirMultiploDe12ComNotaSuperiorASeteDeveRetornarRecompensaRecorrente(){
+        assertEquals(ResultadoProgressao.RECOMPENSA_RECURRENTE,
                 this.politica.avaliar(this.statusAposConcluir(9.0), Plano.PREMIUM, 11));
+        assertEquals(ResultadoProgressao.RECOMPENSA_RECURRENTE,
+                this.politica.avaliar(this.statusAposConcluir(8.0), Plano.PREMIUM, 23));
+        assertEquals(ResultadoProgressao.RECOMPENSA_RECURRENTE,
+                this.politica.avaliar(this.statusAposConcluir(10.0), Plano.PREMIUM, 35));
     }
 
 }

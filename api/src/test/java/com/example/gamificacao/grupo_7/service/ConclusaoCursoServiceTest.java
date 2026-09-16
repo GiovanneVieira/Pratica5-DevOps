@@ -2,7 +2,7 @@ package com.example.gamificacao.grupo_7.service;
 
 import com.example.gamificacao.grupo_7.dto.matricula.ConcluirCursoRequestDTO;
 import com.example.gamificacao.grupo_7.dto.matricula.MatriculaResponseDTO;
-import com.example.gamificacao.grupo_7.dto.matricula.VoucherResponseDTO;
+import com.example.gamificacao.grupo_7.dto.voucher.VoucherResponseDTO;
 import com.example.gamificacao.grupo_7.enums.CursoStatus;
 import com.example.gamificacao.grupo_7.enums.Plano;
 import com.example.gamificacao.grupo_7.enums.VoucherStatus;
@@ -10,6 +10,7 @@ import com.example.gamificacao.grupo_7.exception.aluno.AlunoNotFoundException;
 import com.example.gamificacao.grupo_7.exception.matricula.CursoJaConcluidoException;
 import com.example.gamificacao.grupo_7.exception.matricula.MatriculaNotFoundException;
 import com.example.gamificacao.grupo_7.mapper.MatriculaMapper;
+import com.example.gamificacao.grupo_7.mapper.VoucherMapper;
 import com.example.gamificacao.grupo_7.model.Aluno;
 import com.example.gamificacao.grupo_7.model.Curso;
 import com.example.gamificacao.grupo_7.model.Matricula;
@@ -59,6 +60,8 @@ public class ConclusaoCursoServiceTest {
     @Mock
     MatriculaMapper matriculaMapper;
     @Mock
+    VoucherMapper voucherMapper;
+    @Mock
     PoliticaProgressao politicaProgressao;
     @Mock
     RecompensasService recompensasService;
@@ -75,6 +78,7 @@ public class ConclusaoCursoServiceTest {
                 .ra(new RA("2026123"))
                 .plano(Plano.BASICO)
                 .moedas(0)
+                .cursosConcluidos(5)
                 .build();
     }
 
@@ -95,7 +99,6 @@ public class ConclusaoCursoServiceTest {
     private void stubBuscas(Aluno aluno, Matricula matricula){
         when(this.alunoRepository.findById(ALUNO_ID)).thenReturn(Optional.of(aluno));
         when(this.matriculaRepository.findByIdAndAlunoId(MATRICULA_ID, ALUNO_ID)).thenReturn(Optional.of(matricula));
-        when(this.matriculaRepository.countByAlunoIdAndCursoStatus(ALUNO_ID, CursoStatus.CONCLUIDO)).thenReturn(5L);
         when(this.matriculaRepository.save(any(Matricula.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
@@ -113,7 +116,7 @@ public class ConclusaoCursoServiceTest {
     }
 
     private void stubMapperVoucher(){
-        when(this.matriculaMapper.toVoucherResponseDTO(any(Voucher.class)))
+        when(this.voucherMapper.toResponseDTO(any(Voucher.class)))
                 .thenAnswer(inv -> {
                     var voucher = inv.getArgument(0, Voucher.class);
                     return new VoucherResponseDTO(
@@ -137,7 +140,7 @@ public class ConclusaoCursoServiceTest {
         when(this.politicaProgressao.avaliar(any(CursoStatus.class), any(Plano.class), anyLong()))
                 .thenReturn(ResultadoProgressao.CURSO_BONUS_BASICO);
         when(this.recompensasService.liberarCursosBonus(aluno))
-                .thenReturn(new Recompensa(List.of(this.buildMatriculaAtiva(aluno)), null));
+                .thenReturn(new Recompensa(List.of(this.buildMatriculaAtiva(aluno)), null, 0));
 
         var resposta = this.conclusaoCursoService.concluir(ALUNO_ID, MATRICULA_ID, new ConcluirCursoRequestDTO(8.0));
 
@@ -153,9 +156,9 @@ public class ConclusaoCursoServiceTest {
     void deveConcederRecompensasPremiumQuandoPoliticaIndicaUpgrade(){
         log.info("BDD2 (orquestracao): politica indica upgrade premium");
         var aluno = this.buildAlunoBasico();
+        aluno.setCursosConcluidos(11);
         var matricula = this.buildMatriculaAtiva(aluno);
         this.stubBuscas(aluno, matricula);
-        when(this.matriculaRepository.countByAlunoIdAndCursoStatus(ALUNO_ID, CursoStatus.CONCLUIDO)).thenReturn(11L);
         this.stubMapperCursosLiberados();
         this.stubMapperVoucher();
         when(this.politicaProgressao.avaliar(any(CursoStatus.class), any(Plano.class), anyLong()))
@@ -169,7 +172,7 @@ public class ConclusaoCursoServiceTest {
                 .status(VoucherStatus.VALIDO)
                 .build();
         when(this.recompensasService.concederRecompensasPremium(aluno))
-                .thenReturn(new Recompensa(List.of(this.buildMatriculaAtiva(aluno)), voucher));
+                .thenReturn(new Recompensa(List.of(this.buildMatriculaAtiva(aluno)), voucher, 3));
 
         var resposta = this.conclusaoCursoService.concluir(ALUNO_ID, MATRICULA_ID, new ConcluirCursoRequestDTO(8.0));
 
@@ -177,6 +180,8 @@ public class ConclusaoCursoServiceTest {
         assertEquals(1, resposta.cursosLiberados().size());
         assertNotNull(resposta.voucher());
         assertEquals(VoucherStatus.VALIDO, resposta.voucher().status());
+        assertTrue(resposta.upgradePremium(), "Upgrade para Premium deve ser sinalizado no contrato");
+        assertEquals(3, resposta.moedasRecebidas());
         verify(this.politicaProgressao).avaliar(CursoStatus.CONCLUIDO, Plano.BASICO, 11L);
         verify(this.recompensasService).concederRecompensasPremium(aluno);
         verify(this.recompensasService, never()).liberarCursosBonus(any());
@@ -217,7 +222,55 @@ public class ConclusaoCursoServiceTest {
         assertEquals(Plano.PREMIUM, resposta.plano());
         assertEquals(List.of(), resposta.cursosLiberados());
         assertNull(resposta.voucher());
+        assertFalse(resposta.upgradePremium());
+        assertEquals(0, resposta.moedasRecebidas());
         verifyNoInteractions(this.recompensasService);
+    }
+
+    /**
+     * TDD5 (orquestracao): recorrencia do BDD2 - a cada 12 cursos concluidos
+     * com nota superior a 7,0 o aluno Premium recebe 3 moedas e voucher de novo.
+     */
+    @Test
+    void deveConcederRecompensasRecorrentesQuandoPoliticaIndicaMultiploDe12(){
+        log.info("TDD5 (orquestracao): politica indica recompensa recorrente (multiplo de 12)");
+        var aluno = this.buildAlunoBasico();
+        aluno.setPlano(Plano.PREMIUM);
+        aluno.setMoedas(3);
+        aluno.setCursosConcluidos(23);
+        var matricula = this.buildMatriculaAtiva(aluno);
+        this.stubBuscas(aluno, matricula);
+        this.stubMapperVoucher();
+        when(this.politicaProgressao.avaliar(any(CursoStatus.class), any(Plano.class), anyLong()))
+                .thenReturn(ResultadoProgressao.RECOMPENSA_RECURRENTE);
+        var voucher = Voucher.builder()
+                .id(UUID.randomUUID())
+                .nome("Voucher Projetos Reais")
+                .valor(new VoucherValue(100.0))
+                .descricao("Voucher para participacao em projetos reais, concedido a cada 12 cursos concluidos")
+                .aluno(aluno)
+                .status(VoucherStatus.VALIDO)
+                .build();
+        when(this.recompensasService.concederRecompensasRecorrentes(aluno))
+                .thenAnswer(inv -> {
+                    // simula o efeito do servico real sobre o aluno mockado
+                    aluno.setMoedas(aluno.getMoedas() + 3);
+                    return new Recompensa(List.of(), voucher, 3);
+                });
+
+        var resposta = this.conclusaoCursoService.concluir(ALUNO_ID, MATRICULA_ID, new ConcluirCursoRequestDTO(9.0));
+
+        assertEquals(CursoStatus.CONCLUIDO, resposta.status());
+        assertEquals(Plano.PREMIUM, resposta.plano());
+        assertEquals(6, resposta.moedas());
+        assertEquals(3, resposta.moedasRecebidas());
+        assertFalse(resposta.upgradePremium(), "Recorrencia nao e um novo upgrade de plano");
+        assertEquals(List.of(), resposta.cursosLiberados());
+        assertNotNull(resposta.voucher());
+        assertEquals(24, aluno.getCursosConcluidos());
+        verify(this.recompensasService).concederRecompensasRecorrentes(aluno);
+        verify(this.recompensasService, never()).concederRecompensasPremium(any());
+        verify(this.recompensasService, never()).liberarCursosBonus(any());
     }
 
     @Test
@@ -248,12 +301,44 @@ public class ConclusaoCursoServiceTest {
 
         assertThrows(CursoJaConcluidoException.class,
                 () -> this.conclusaoCursoService.concluir(ALUNO_ID, MATRICULA_ID, new ConcluirCursoRequestDTO(8.0)));
-        verify(this.matriculaRepository, never()).countByAlunoIdAndCursoStatus(any(UUID.class), any(CursoStatus.class));
+        assertEquals(5, aluno.getCursosConcluidos(), "Curso ja concluido nao deve alterar o progresso");
         verifyNoInteractions(this.politicaProgressao, this.recompensasService);
     }
 
+    /**
+     * TDD4 - progresso persistido (RED):
+     *
+     *   Dado um aluno com 5 cursos concluidos no progresso persistido
+     *   Quando ele conclui um novo curso com nota superior a 7,0
+     *   Entao a politica deve ser consultada com o progresso de ANTES (5)
+     *   E o progresso persistido do aluno deve passar a 6
+     *   E o aluno deve ser persistido com o novo progresso
+     */
     @Test
-    void deveContarConcluidosAntesDeAplicarANota(){
+    void deveIncrementarProgressoPersistidoDoAlunoAoConcluirComNotaSuperiorASete(){
+        var aluno = this.buildAlunoBasico();
+        var matricula = this.buildMatriculaAtiva(aluno);
+        this.stubBuscas(aluno, matricula);
+        when(this.politicaProgressao.avaliar(any(CursoStatus.class), any(Plano.class), anyLong()))
+                .thenReturn(ResultadoProgressao.CURSO_BONUS_BASICO);
+        when(this.recompensasService.liberarCursosBonus(aluno)).thenReturn(Recompensa.vazia());
+
+        this.conclusaoCursoService.concluir(ALUNO_ID, MATRICULA_ID, new ConcluirCursoRequestDTO(8.0));
+
+        verify(this.politicaProgressao).avaliar(CursoStatus.CONCLUIDO, Plano.BASICO, 5L);
+        assertEquals(6, aluno.getCursosConcluidos(), "Conclusao com nota superior a 7,0 deve incrementar o progresso");
+        verify(this.alunoRepository).save(aluno);
+    }
+
+    /**
+     * TDD4 - progresso persistido (RED):
+     *
+     *   Dado um aluno com 5 cursos concluidos no progresso persistido
+     *   Quando ele conclui um curso com nota igual ou inferior a 7,0 (reprovado)
+     *   Entao o progresso persistido deve permanecer 5
+     */
+    @Test
+    void naoDeveIncrementarProgressoPersistidoQuandoReprovado(){
         var aluno = this.buildAlunoBasico();
         var matricula = this.buildMatriculaAtiva(aluno);
         this.stubBuscas(aluno, matricula);
@@ -262,9 +347,8 @@ public class ConclusaoCursoServiceTest {
 
         this.conclusaoCursoService.concluir(ALUNO_ID, MATRICULA_ID, new ConcluirCursoRequestDTO(5.0));
 
-        // A contagem deve refletir os concluidos ANTES desta conclusao (5L, nao 6L)
-        verify(this.matriculaRepository).countByAlunoIdAndCursoStatus(ALUNO_ID, CursoStatus.CONCLUIDO);
-        verify(this.politicaProgressao).avaliar(any(CursoStatus.class), any(Plano.class), eq(5L));
+        assertEquals(5, aluno.getCursosConcluidos(), "Reprovacao nao deve incrementar o progresso");
+        verify(this.alunoRepository, never()).save(aluno);
     }
 
 }

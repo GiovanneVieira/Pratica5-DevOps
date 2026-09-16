@@ -2,12 +2,15 @@
 
 import com.example.gamificacao.grupo_7.dto.aluno.AlunoRequestDTO;
 import com.example.gamificacao.grupo_7.dto.aluno.AlunoResponseDTO;
+import com.example.gamificacao.grupo_7.dto.login.LoginRequestDTO;
 import com.example.gamificacao.grupo_7.exception.aluno.AlunoNotFoundException;
 import com.example.gamificacao.grupo_7.exception.aluno.EmailAlreadyExistsException;
+import com.example.gamificacao.grupo_7.exception.login.AuthenticationFailedException;
 import com.example.gamificacao.grupo_7.mapper.AlunoMapper;
 import com.example.gamificacao.grupo_7.model.validation_object.RA;
 import com.example.gamificacao.grupo_7.repository.AlunoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,35 +22,53 @@ public class AlunoService {
 
     private final AlunoRepository alunoRepository;
     private final AlunoMapper alunoMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public AlunoResponseDTO criaAluno(AlunoRequestDTO requestDTO){
-<span class="fc bfc" id="L24" title="All 2 branches covered.">        if(this.alunoRepository.existsByEmail(requestDTO.email())){</span>
-<span class="fc" id="L25">            throw new EmailAlreadyExistsException(&quot;O email &quot; + requestDTO.email() + &quot; ja existe&quot;);</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if(this.alunoRepository.existsByEmail(requestDTO.email())){</span>
+<span class="fc" id="L29">            throw new EmailAlreadyExistsException(&quot;O email &quot; + requestDTO.email() + &quot; ja existe&quot;);</span>
         }
-<span class="fc" id="L27">        var newAluno = alunoMapper.toEntity(requestDTO);</span>
-<span class="fc" id="L28">        var savedAluno = this.alunoRepository.save(newAluno);</span>
+<span class="fc" id="L31">        var newAluno = alunoMapper.toEntity(requestDTO);</span>
+<span class="fc" id="L32">        var savedAluno = this.alunoRepository.save(newAluno);</span>
 
-<span class="fc" id="L30">        return this.alunoMapper.toResponseDTO(savedAluno);</span>
+<span class="fc" id="L34">        return this.alunoMapper.toResponseDTO(savedAluno);</span>
     }
 
     public AlunoResponseDTO getAlunoById(UUID id){
-<span class="fc" id="L34">        var aluno = this.alunoRepository.findById(id).orElseThrow(() -&gt; new AlunoNotFoundException(&quot;Aluno com id &quot; + id + &quot; nao encontrado&quot;));</span>
-<span class="fc" id="L35">        return this.alunoMapper.toResponseDTO(aluno);</span>
+<span class="fc" id="L38">        var aluno = this.alunoRepository.findById(id).orElseThrow(() -&gt; new AlunoNotFoundException(&quot;Aluno com id &quot; + id + &quot; nao encontrado&quot;));</span>
+<span class="fc" id="L39">        return this.alunoMapper.toResponseDTO(aluno);</span>
     }
 
     public AlunoResponseDTO getAlunoByRA(String ra){
-<span class="fc" id="L39">        var aluno = this.alunoRepository.findByRa(new RA(ra)).orElseThrow(() -&gt; new AlunoNotFoundException(&quot;Aluno com RA &quot; + ra + &quot; nao encontrado&quot;));</span>
-<span class="fc" id="L40">        return this.alunoMapper.toResponseDTO(aluno);</span>
+<span class="fc" id="L43">        var aluno = this.alunoRepository.findByRa(new RA(ra)).orElseThrow(() -&gt; new AlunoNotFoundException(&quot;Aluno com RA &quot; + ra + &quot; nao encontrado&quot;));</span>
+<span class="fc" id="L44">        return this.alunoMapper.toResponseDTO(aluno);</span>
     }
 
     public List&lt;AlunoResponseDTO&gt; getAlunos(){
 
-<span class="fc" id="L45">        return this.alunoRepository</span>
-<span class="fc" id="L46">                .findAll()</span>
-<span class="fc" id="L47">                .stream()</span>
-<span class="fc" id="L48">                .map(alunoMapper::toResponseDTO)</span>
-<span class="fc" id="L49">                .toList();</span>
+<span class="fc" id="L49">        return this.alunoRepository</span>
+<span class="fc" id="L50">                .findAll()</span>
+<span class="fc" id="L51">                .stream()</span>
+<span class="fc" id="L52">                .map(alunoMapper::toResponseDTO)</span>
+<span class="fc" id="L53">                .toList();</span>
 
+    }
+
+    /**
+     * Login simples com BCrypt: compara a senha do input com o hash
+     * armazenado via passwordEncoder.matches. Mensagem generica tanto para
+     * email inexistente quanto para senha incorreta, para nao vazar qual
+     * campo errou.
+     */
+    public AlunoResponseDTO login(LoginRequestDTO requestDTO){
+<span class="fc" id="L64">        var aluno = this.alunoRepository.findByEmail(requestDTO.email())</span>
+<span class="fc" id="L65">                .orElseThrow(() -&gt; new AuthenticationFailedException(&quot;Credenciais invalidas&quot;));</span>
+
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (!this.passwordEncoder.matches(requestDTO.password(), aluno.getPassword())){</span>
+<span class="fc" id="L68">            throw new AuthenticationFailedException(&quot;Credenciais invalidas&quot;);</span>
+        }
+
+<span class="fc" id="L71">        return this.alunoMapper.toResponseDTO(aluno);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

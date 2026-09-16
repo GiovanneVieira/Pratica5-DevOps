@@ -41,6 +41,8 @@ public class RecompensasService {
     private static final double VALOR_VOUCHER_PREMIUM = 100.0;
     private static final String DESCRICAO_VOUCHER_PREMIUM =
             "Voucher para participacao em projetos reais, concedido no upgrade para o plano Premium";
+    private static final String DESCRICAO_VOUCHER_RECURRENTE =
+            "Voucher para participacao em projetos reais, concedido a cada 12 cursos concluidos";
 
     private final MatriculaRepository matriculaRepository;
     private final VoucherRepository voucherRepository;
@@ -56,7 +58,7 @@ public class RecompensasService {
      * sem tocar em plano, moedas ou voucher.
      */
     public Recompensa liberarCursosBonus(Aluno aluno){
-        return new Recompensa(this.matricularCursos(aluno, this.criaCursosBonus()), null);
+        return new Recompensa(this.matricularCursos(aluno, this.criaCursosBonus()), null, 0);
     }
 
     /**
@@ -71,7 +73,25 @@ public class RecompensasService {
         this.aplicarUpgradePremium(aluno, recompensas.moedas());
         Voucher voucherSalvo = this.voucherRepository.save(recompensas.voucher());
         var cursosLiberados = this.matricularCursos(aluno, recompensas.cursos());
-        return new Recompensa(cursosLiberados, voucherSalvo);
+        return new Recompensa(cursosLiberados, voucherSalvo, recompensas.moedas());
+    }
+
+    /**
+     * TDD5 - GREEN (recorrencia do BDD2, "a cada 12 cursos concluidos"):
+     * credita 3 novas moedas e emite um novo voucher para projetos reais
+     * (VALIDO, expira em 7 dias), sem alterar o plano e sem matricular
+     * cursos bonus.
+     */
+    public Recompensa concederRecompensasRecorrentes(Aluno aluno){
+        aluno.setMoedas(aluno.getMoedas() + QUANTIDADE_MOEDAS_PREMIUM);
+        this.alunoRepository.save(aluno);
+        Voucher voucher = this.voucherMapper.buildEntity(
+                NOME_VOUCHER_PREMIUM,
+                VALOR_VOUCHER_PREMIUM,
+                DESCRICAO_VOUCHER_RECURRENTE,
+                aluno
+        );
+        return new Recompensa(List.of(), this.voucherRepository.save(voucher), QUANTIDADE_MOEDAS_PREMIUM);
     }
 
     private List<Curso> criaCursosBonus(){

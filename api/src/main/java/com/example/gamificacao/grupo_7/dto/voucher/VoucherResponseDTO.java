@@ -1,4 +1,4 @@
-package com.example.gamificacao.grupo_7.dto.matricula;
+package com.example.gamificacao.grupo_7.dto.voucher;
 
 import com.example.gamificacao.grupo_7.enums.VoucherStatus;
 

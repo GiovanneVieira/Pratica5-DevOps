@@ -42,4 +42,20 @@ public class AlunoMapperTest {
                 "Senha original deve validar contra o hash gerado");
     }
 
+    /**
+     * TDD4 - contrato do progresso persistido: o response do aluno deve
+     * expor o progresso oficial (cursosConcluidos) para a UI nao ter que
+     * deriva-lo do historico de matriculas (que pode ser apagado).
+     */
+    @Test
+    void deveExporProgressoPersistidoNoResponseDoAluno(){
+        var aluno = this.alunoMapper.toEntity(new AlunoRequestDTO("Maria", "maria@email.com", "123456"));
+        assertEquals(0, aluno.getCursosConcluidos(), "Aluno novo comeca sem progresso");
+
+        aluno.setCursosConcluidos(7);
+
+        var response = this.alunoMapper.toResponseDTO(aluno);
+        assertEquals(7, response.cursosConcluidos());
+    }
+
 }

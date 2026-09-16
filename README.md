@@ -6,10 +6,19 @@ Projeto desenvolvido como parte da disciplina de Prática 5 de DevOps. Trata-se 
 - **Banco de Dados (`postgres`)**: **PostgreSQL 16 (Alpine)** executado em container Docker.
 - **Orquestração & DevOps**: Ambientes containerizados com **Docker** e **Docker Compose**, contando com suporte a multi-stage builds e **Docker Compose Watch** para sincronização em tempo real (hot-reload).
 
+## 👥 Integrantes do Grupo
+
+| Nome | RA |
+|---|---|
+| Enzo Yamaoca Borlini | 236774 |
+| Giovanne Vieira de Queiroz | 235969 |
+| Lucas Marino Tomazeli | 235798 |
+
 ---
 
 ## 📋 Sumário
 
+- [Integrantes do Grupo](#-integrantes-do-grupo)
 - [Visão Geral e Arquitetura](#-visão-geral-e-arquitetura)
 - [Mapeamento de Portas e Serviços](#-mapeamento-de-portas-e-serviços)
 - [Pré-requisitos](#-pré-requisitos)
@@ -620,6 +629,30 @@ Valida credenciais comparando a senha do input com o hash **BCrypt** armazenado 
     "timestamp": "2026-09-15T23:59:00.000Z"
   }
   ```
+
+---
+
+### 7. Listar vouchers do aluno
+Retorna os vouchers **persistidos** no banco (do upgrade Premium no 12º curso e das recorrências a cada 12 concluídos), para o painel "Seus vouchers" sobreviver ao refresh da página. Aluno inexistente devolve `404`.
+- **Método**: `GET`
+- **URL**: `http://localhost:8080/alunos/{alunoId}/vouchers`
+- **Exemplo via cURL**:
+  ```bash
+  curl http://localhost:8080/alunos/{alunoId}/vouchers
+  ```
+- **Resposta esperada** (`200 OK`):
+  ```json
+  [
+    {
+      "id": "b1c2...",
+      "nome": "Voucher Projetos Reais",
+      "valorEmReais": 100.0,
+      "descricao": "Voucher para participacao em projetos reais, concedido no upgrade para o plano Premium",
+      "status": "VALIDO",
+      "expiresAt": "2026-09-23T12:00:00"
+    }
+  ]
+  ```
 ---
 
 ## 🧪 Metodologia ATDD — Passo a Passo dos TDDs
@@ -665,15 +698,50 @@ Cada teste carrega em javadoc o cenário Given/When/Then correspondente, e cada 
 **Onde está hoje:** `model/Curso.java` (`conclui()`), `service/progressao/PoliticaProgressaoPadrao.java` (bloco `TDD3 - GREEN`).
 **Testes:** `CursoTest` (nota 7,0 e 6,5 → `REPROVADO`; 7,1 → `CONCLUIDO`), `PoliticaProgressaoPadraoTest.bdd3_...`, `MatriculaFlowIntegrationTest.bdd3_...` (notas 7,0 e 6,5).
 
+### TDD4 — Apagar curso do histórico não apaga o progresso do aluno (ciclo de correção)
+
+**Cenário (bug reportado, não presente na planilha):** *Dado* um aluno com cursos concluídos no progresso *Quando* ele apaga um curso concluído do histórico (desistência/remoção) *Então* o progresso acumulado para o plano Premium deve permanecer intacto.
+
+1. **RED**: o progresso era **derivado** da contagem de matrículas `CONCLUIDO` no banco (`countByAlunoIdAndCursoStatus`) e do filtro da lista no front — apagar um curso concluído retrocedia o progresso. Testes criados para o comportamento esperado falharam: a política era consultada com o total errado e o contador do aluno não era incrementado na conclusão (`ConclusaoCursoServiceTest.deveIncrementarProgressoPersistido...`).
+2. **GREEN**: o progresso virou **estado persistido do aluno** (`Aluno.cursosConcluidos`), incrementado a cada conclusão com nota > 7,0 em `ConclusaoCursoService.atualizaProgresso()`; a `PoliticaProgressao` passou a ser consultada com esse valor. O método de contagem derivada foi removido do repositório.
+3. **BLUE**: `AlunoResponseDTO` expõe `cursosConcluidos` para a UI exibir o progresso oficial (o stat "CURSOS CONCLUÍDOS" do dashboard deixou de derivar do histórico); desistência/apagamento não tocam no contador, e a coluna nova é nullable-safe para linhas criadas antes da migração (backfill aplicado no banco de desenvolvimento).
+
+**Onde está hoje:** `model/Aluno.java` (`cursosConcluidos`), `service/ConclusaoCursoService.java` (`atualizaProgresso`, bloco `TDD4 - GREEN`), `dto/aluno/AlunoResponseDTO.java`.
+**Testes:** `ConclusaoCursoServiceTest` (incrementa na conclusão; não incrementa na reprovação), `MatriculaServiceTest.naoDeveReduzirProgressoPersistido...` (desistência mantém progresso), `AlunoMapperTest.deveExporProgressoPersistido...`, `MatriculaFlowIntegrationTest.tdd4_...` (aluno com 11 concluídos apaga um do histórico e vira Premium no 12º progresso).
+
+### TDD5 — Recompensas recorrentes a cada 12 cursos concluídos (evolução do BDD2)
+
+**Cenário (interpretação recorrente do BDD2):** *Dado* um aluno Premium que já recebeu o pacote do 12º curso *Quando* ele fecha cada novo ciclo de 12 concluídos com nota > 7,0 (24º, 36º...) *Então* recebe novamente **3 moedas e voucher** para projetos reais — o upgrade de plano e os cursos bônus continuam exclusivos do primeiro 12º (BDD2 original).
+
+1. **RED**: a política devolvia `SEM_RECOMPENSA` para qualquer aluno Premium — moedas e voucher eram concedidos uma única vez na vida. Testes criados para a recorrência falharam (`PoliticaProgressaoPadraoTest.tdd5_...`).
+2. **GREEN**: novo resultado `RECOMPENSA_RECURRENTE` na política (progresso `+1` múltiplo de 12 e plano Premium) e `RecompensasService.concederRecompensasRecorrentes()`: credita 3 moedas e emite novo voucher (VÁLIDO, 7 dias), sem tocar no plano nem matricular cursos bônus.
+3. **BLUE**: `ConcluirCursoResponseDTO` passou a explicitar `upgradePremium` e `moedasRecebidas` (o que foi concedido *nesta* operação, distinguindo saldo de crédito) para a UI exibir o modal correto em cada caso.
+
+**Onde está hoje:** `service/progressao/PoliticaProgressaoPadrao.java` (bloco `TDD5 - GREEN`), `service/RecompensasService.java` (`concederRecompensasRecorrentes`), `service/ConclusaoCursoService.java` (mapeamento do resultado).
+**Testes:** `PoliticaProgressaoPadraoTest.tdd5_...` (12º/24º/36º de Premium), `RecompensasServiceTest.concederRecompensasRecorrentes...`, `ConclusaoCursoServiceTest.deveConcederRecompensasRecorrentes...`, `MatriculaFlowIntegrationTest.tdd5_...` (aluno vira Premium no 12º e recebe novamente no 24º: saldo 6, segundo voucher, sem upgrade).
+
+### TDD6 — Consulta dos vouchers persistidos (ciclo de correção)
+
+**Cenário:** *Dado* um aluno com vouchers conquistados *Quando* a página é recarregada *Então* o painel "Seus vouchers" deve exibi-los novamente — os vouchers sempre foram persistidos no banco, mas não existia endpoint de listagem e a UI só guardava o voucher do response de conclusão em estado de sessão (somia no refresh).
+
+1. **RED**: teste de integração criado para `GET /alunos/{id}/vouchers` falhou com **404** — a rota não existia.
+2. **GREEN**: `VoucherRepository.findAllByAlunoId` + `VoucherService.listarVouchers` (valida aluno → 404) + `VoucherController` com `GET /alunos/{alunoId}/vouchers`; o mapeamento `toResponseDTO` migrou do `MatriculaMapper` para o `VoucherMapper` (lugar da responsabilidade) e o `VoucherResponseDTO` para o pacote `dto/voucher/`.
+3. **BLUE**: a UI passou a buscar os vouchers no carregamento do dashboard (`getVouchers` no `carregarDados` e no mount), e a adição manual do voucher pós-conclusão foi removida (o recarregamento já traz a lista completa, sem duplicatas).
+
+**Onde está hoje:** `controller/VoucherController.java`, `service/VoucherService.java`, `repository/VoucherRepository.java`, `mapper/VoucherMapper.java` (`toResponseDTO`).
+**Testes:** `VoucherServiceTest` (lista vouchers persistidos; aluno inexistente lança 404), `MatriculaFlowIntegrationTest.tdd6_...` (aluno com 2 vouchers conquistados → GET retorna os 2; aluno inexistente → 404).
+
 ### Mapa de cobertura dos cenários
 
-| Camada | TDD1 | TDD2 | TDD3 |
-|---|---|---|---|
-| Domínio (`CursoTest`) | — | — | nota ≤ 7,0 reprova |
-| Regra (`PoliticaProgressaoPadraoTest`) | `bdd1_...` | `bdd2_...` | `bdd3_...` |
-| Recompensas (`RecompensasServiceTest`) | 3 cursos INICIADO | Premium + moedas + voucher | — |
-| Orquestração (`ConclusaoCursoServiceTest`) | chama `liberarCursosBonus` | chama `concederRecompensasPremium` | nenhuma recompensa |
-| Integração HTTP (`MatriculaFlowIntegrationTest`) | fluxo completo | fluxo completo | fluxo completo |
+| Camada | TDD1 | TDD2 | TDD3 | TDD4 | TDD5 | TDD6 |
+|---|---|---|---|---|---|---|
+| Domínio (`CursoTest`) | — | — | nota ≤ 7,0 reprova | — | — | — |
+| Regra (`PoliticaProgressaoPadraoTest`) | `bdd1_...` | `bdd2_...` | `bdd3_...` | — | `tdd5_...` | — |
+| Recompensas (`RecompensasServiceTest`) | 3 cursos INICIADO | Premium + moedas + voucher | — | — | recorrência: +3 moedas + voucher | — |
+| Orquestração (`ConclusaoCursoServiceTest`) | chama `liberarCursosBonus` | chama `concederRecompensasPremium` | nenhuma recompensa | progresso persistido incrementa/retém | chama `concederRecompensasRecorrentes` | — |
+| Desistência (`MatriculaServiceTest`) | — | — | — | progresso intacto ao apagar | — | — |
+| Vouchers (`VoucherServiceTest`) | — | — | — | — | — | lista persistidos; 404 |
+| Integração HTTP (`MatriculaFlowIntegrationTest`) | fluxo completo | fluxo completo | fluxo completo | apagar concluído mantém progresso | 24º curso re-premia | GET vouchers retorna os 2 |
 
 > **Trajetória histórica:** os três ciclos nasceram na primeira entrega como testes de unidade diretos sobre a entidade `Aluno` (que acumulava as regras de propósito, documentado no próprio código da época). Na refatoração para camadas MVC a lógica migrou para os services, e na refatoração SOLID final foi dividida em `PoliticaProgressao` (decisão), `RecompensasService` (concessão) e `ConclusaoCursoService` (orquestração) — com os testes de aceitação mantidos verdes em cada etapa, como manda o ATDD.
 

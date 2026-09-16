@@ -5,18 +5,30 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-<span class="fc" id="L12">public class SecurityConfig {</span>
+<span class="fc" id="L14">public class SecurityConfig {</span>
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-<span class="fc" id="L16">        http</span>
-<span class="fc" id="L17">                .csrf(AbstractHttpConfigurer::disable)</span>
-<span class="fc" id="L18">                .authorizeHttpRequests(auth -&gt; auth.anyRequest().permitAll());</span>
-<span class="fc" id="L19">        return http.build();</span>
+<span class="fc" id="L18">        http</span>
+<span class="fc" id="L19">                .csrf(AbstractHttpConfigurer::disable)</span>
+<span class="fc" id="L20">                .authorizeHttpRequests(auth -&gt; auth.anyRequest().permitAll());</span>
+<span class="fc" id="L21">        return http.build();</span>
+    }
+
+    /**
+     * BCrypt para hash de senhas: usado no cadastro (encode) e no login
+     * (matches - comparacao do input com o hash armazenado). Exposto como
+     * PasswordEncoder para as camadas dependerem da abstracao (DIP).
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+<span class="fc" id="L31">        return new BCryptPasswordEncoder();</span>
     }
 
 }

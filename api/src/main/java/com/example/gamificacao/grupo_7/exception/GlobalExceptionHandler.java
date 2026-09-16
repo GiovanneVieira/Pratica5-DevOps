@@ -3,6 +3,7 @@ package com.example.gamificacao.grupo_7.exception;
 import com.example.gamificacao.grupo_7.exception.aluno.AlunoNotFoundException;
 import com.example.gamificacao.grupo_7.exception.aluno.EmailAlreadyExistsException;
 import com.example.gamificacao.grupo_7.exception.login.AuthenticationFailedException;
+import com.example.gamificacao.grupo_7.exception.matricula.MatriculaNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AlunoNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleAlunoNotFound(AlunoNotFoundException ex, HttpServletRequest request){
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(MatriculaNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMatriculaNotFound(MatriculaNotFoundException ex, HttpServletRequest request){
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
     }
 

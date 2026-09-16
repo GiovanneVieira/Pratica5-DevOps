@@ -35,4 +35,13 @@ public class MatriculaController {
         return ResponseEntity.status(HttpStatus.OK).body(matriculas);
     }
 
+    @DeleteMapping("/alunos/{alunoId}/matriculas/{matriculaId}")
+    public ResponseEntity<Void> deleteMatricula(
+            @PathVariable UUID alunoId,
+            @PathVariable UUID matriculaId
+    ){
+        this.matriculaService.desistirMatricula(alunoId, matriculaId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
 }

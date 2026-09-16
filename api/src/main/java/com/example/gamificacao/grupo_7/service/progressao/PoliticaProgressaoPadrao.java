@@ -20,6 +20,14 @@ public class PoliticaProgressaoPadrao implements PoliticaProgressao {
             return ResultadoProgressao.REPROVADO_SEM_PROGRESSO;
         }
 
+        // TDD5 - GREEN: a cada 12 cursos concluidos com nota > 7.0 as recompensas
+        // do BDD2 se renovam para o aluno Premium: 3 moedas e voucher novamente
+        long totalConcluidos = cursosConcluidosAntes + 1;
+        if (planoAluno == Plano.PREMIUM
+                && totalConcluidos % CursosParametros.CURSOS_NECESSARIOS_PREMIUM.getValor() == 0) {
+            return ResultadoProgressao.RECOMPENSA_RECURRENTE;
+        }
+
         // As recompensas da planilha se aplicam apenas ao plano Basico
         if (planoAluno != Plano.BASICO) {
             return ResultadoProgressao.SEM_RECOMPENSA;

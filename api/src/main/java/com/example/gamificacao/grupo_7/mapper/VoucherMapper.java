@@ -1,5 +1,6 @@
 package com.example.gamificacao.grupo_7.mapper;
 
+import com.example.gamificacao.grupo_7.dto.voucher.VoucherResponseDTO;
 import com.example.gamificacao.grupo_7.enums.VoucherStatus;
 import com.example.gamificacao.grupo_7.model.Aluno;
 import com.example.gamificacao.grupo_7.model.Voucher;
@@ -24,6 +25,17 @@ public class VoucherMapper {
                 .expiresAt(LocalDateTime.now().plusDays(7))
                 .status(VoucherStatus.VALIDO)
                 .build();
+    }
+
+    public VoucherResponseDTO toResponseDTO(Voucher voucher){
+        return new VoucherResponseDTO(
+                voucher.getId(),
+                voucher.getNome(),
+                voucher.getValor().getValorEmCentavos() / VoucherValue.CENTAVOS_POR_REAL,
+                voucher.getDescricao(),
+                voucher.getStatus(),
+                voucher.getExpiresAt()
+        );
     }
 
 }

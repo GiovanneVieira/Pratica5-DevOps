@@ -35,5 +35,14 @@ public class MatriculaController {
 <span class="fc" id="L35">        return ResponseEntity.status(HttpStatus.OK).body(matriculas);</span>
     }
 
+    @DeleteMapping(&quot;/alunos/{alunoId}/matriculas/{matriculaId}&quot;)
+    public ResponseEntity&lt;Void&gt; deleteMatricula(
+            @PathVariable UUID alunoId,
+            @PathVariable UUID matriculaId
+    ){
+<span class="fc" id="L43">        this.matriculaService.desistirMatricula(alunoId, matriculaId);</span>
+<span class="fc" id="L44">        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();</span>
+    }
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

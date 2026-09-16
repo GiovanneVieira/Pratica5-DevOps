@@ -21,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -130,6 +131,43 @@ public class RecompensasServiceTest {
         assertSame(voucher, recompensa.voucher());
         verify(this.alunoRepository).save(aluno);
         verify(this.voucherRepository).save(voucher);
+    }
+
+    /**
+     * TDD5 - GREEN (recorrencia do BDD2, "a cada 12 cursos concluidos"):
+     *
+     *   Dado um aluno Premium que fechou um novo ciclo de 12 concluidos
+     *   Quando a recompensa recorrente e concedida
+     *   Entao 3 novas moedas sao creditadas
+     *   E um novo voucher para projetos reais e emitido
+     *   E nem o plano nem os cursos bonus sao alterados
+     */
+    @Test
+    void concederRecompensasRecorrentesDeveCreditarMoedasEEmitirVoucherSemCursosBonus(){
+        var aluno = this.buildAlunoBasico();
+        aluno.setPlano(Plano.PREMIUM);
+        aluno.setMoedas(3);
+        var voucher = Voucher.builder()
+                .id(UUID.randomUUID())
+                .nome("Voucher Projetos Reais")
+                .valor(new VoucherValue(100.0))
+                .descricao("Voucher para participacao em projetos reais, concedido a cada 12 cursos concluidos")
+                .aluno(aluno)
+                .status(VoucherStatus.VALIDO)
+                .build();
+        when(this.voucherMapper.buildEntity(anyString(), anyDouble(), anyString(), eq(aluno))).thenReturn(voucher);
+        when(this.voucherRepository.save(voucher)).thenReturn(voucher);
+
+        var recompensa = this.recompensasService.concederRecompensasRecorrentes(aluno);
+
+        assertEquals(6, aluno.getMoedas(), "Recompensa recorrente credita mais 3 moedas");
+        assertEquals(Plano.PREMIUM, aluno.getPlano(), "Plano permanece Premium (sem novo upgrade)");
+        assertEquals(List.of(), recompensa.cursosLiberados(), "Recorrencia nao libera cursos bonus");
+        assertSame(voucher, recompensa.voucher());
+        assertEquals(3, recompensa.moedasConcedidas());
+        verify(this.alunoRepository).save(aluno);
+        verify(this.voucherRepository).save(voucher);
+        verify(this.matriculaRepository, never()).save(any());
     }
 
 }

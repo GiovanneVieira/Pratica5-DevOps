@@ -7,6 +7,7 @@ import com.example.gamificacao.grupo_7.exception.aluno.AlunoNotFoundException;
 import com.example.gamificacao.grupo_7.exception.matricula.CursoJaConcluidoException;
 import com.example.gamificacao.grupo_7.exception.matricula.MatriculaNotFoundException;
 import com.example.gamificacao.grupo_7.mapper.MatriculaMapper;
+import com.example.gamificacao.grupo_7.mapper.VoucherMapper;
 import com.example.gamificacao.grupo_7.model.Aluno;
 import com.example.gamificacao.grupo_7.model.Matricula;
 import com.example.gamificacao.grupo_7.model.Recompensa;
@@ -21,9 +22,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 /**
- * Orquestra o caso de uso de conclusao de curso: valida a matricula, aplica a nota,
- * consulta a politica de progressao (regras BDD da planilha) e concede a recompensa
- * correspondente. Nao conhece os detalhes de cada regra nem de cada recompensa.
+ * Orquestra o caso de uso de conclusao de curso, ponto de convergencia dos tres
+ * ciclos ATDD (TDD1, TDD2 e TDD3) da planilha Template_ATDD_Gamificacao.xlsx:
+ * valida a matricula, aplica a nota, consulta a PoliticaProgressao (quem conhece
+ * as regras de cada cenario) e concede a recompensa correspondente via
+ * RecompensasService. Nao conhece os detalhes de nenhuma regra nem recompensa.
+ *
+ * Fluxo em comum aos cenarios:
+ *   Dado um aluno com assinatura basica ativa e uma matricula em curso da grade
+ *   Quando o aluno conclui o curso com uma nota final
+ *   Entao a PoliticaProgressao decide o resultado e as recompensas sao aplicadas
  */
 @Service
 @RequiredArgsConstructor
@@ -32,75 +40,98 @@ public class ConclusaoCursoService {
     private final MatriculaRepository matriculaRepository;
     private final AlunoRepository alunoRepository;
     private final MatriculaMapper matriculaMapper;
+    private final VoucherMapper voucherMapper;
     private final PoliticaProgressao politicaProgressao;
     private final RecompensasService recompensasService;
 
     @Transactional
     public ConcluirCursoResponseDTO concluir(UUID alunoId, UUID matriculaId, ConcluirCursoRequestDTO requestDTO){
-<span class="fc" id="L40">        var aluno = this.buscaAluno(alunoId);</span>
-<span class="fc" id="L41">        var matricula = this.buscaMatricula(alunoId, matriculaId);</span>
-<span class="fc" id="L42">        this.validaCursoNaoConcluido(matricula);</span>
+<span class="fc" id="L49">        var aluno = this.buscaAluno(alunoId);</span>
+<span class="fc" id="L50">        var matricula = this.buscaMatricula(alunoId, matriculaId);</span>
+<span class="fc" id="L51">        this.validaCursoNaoConcluido(matricula);</span>
 
-<span class="fc" id="L44">        long concluidosAntes = this.matriculaRepository.countByAlunoIdAndCursoStatus(alunoId, CursoStatus.CONCLUIDO);</span>
-<span class="fc" id="L45">        this.aplicaNotaFinal(matricula, requestDTO.notaFinal());</span>
+<span class="fc" id="L53">        int concluidosAntes = aluno.getCursosConcluidos();</span>
+<span class="fc" id="L54">        this.aplicaNotaFinal(matricula, requestDTO.notaFinal());</span>
+<span class="fc" id="L55">        this.atualizaProgresso(aluno, matricula, concluidosAntes);</span>
 
-<span class="fc" id="L47">        var resultado = this.politicaProgressao.avaliar(matricula.getCurso().getStatus(), aluno.getPlano(), concluidosAntes);</span>
-<span class="fc" id="L48">        var recompensa = this.concedeRecompensa(aluno, resultado);</span>
+<span class="fc" id="L57">        var resultado = this.politicaProgressao.avaliar(matricula.getCurso().getStatus(), aluno.getPlano(), concluidosAntes);</span>
+<span class="fc" id="L58">        var recompensa = this.concedeRecompensa(aluno, resultado);</span>
 
-<span class="fc" id="L50">        return this.montaResposta(matricula, aluno, recompensa);</span>
+<span class="fc" id="L60">        return this.montaResposta(matricula, aluno, recompensa, resultado);</span>
     }
 
+    /**
+     * TDD4 (GREEN): o progresso para o plano Premium e estado persistido do
+     * aluno (cursosConcluidos), incrementado a cada conclusao com nota
+     * superior a 7,0. Por ser persistido - e nao derivado da contagem de
+     * matriculas no historico - apagar ou desistir de um curso concluido
+     * nao reduz o progresso ja conquistado:
+     *
+     *   Dado um aluno com cursos concluidos no progresso
+     *   Quando ele apaga um curso do historico
+     *   Entao o progresso acumulado permanece intacto
+     */
+    private void atualizaProgresso(Aluno aluno, Matricula matricula, int concluidosAntes){
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (matricula.getCurso().getStatus() == CursoStatus.CONCLUIDO){</span>
+<span class="fc" id="L76">            aluno.setCursosConcluidos(concluidosAntes + 1);</span>
+<span class="fc" id="L77">            this.alunoRepository.save(aluno);</span>
+        }
+<span class="fc" id="L79">    }</span>
+
     private Recompensa concedeRecompensa(Aluno aluno, ResultadoProgressao resultado){
-<span class="fc bfc" id="L54" title="All 3 branches covered.">        return switch (resultado) {</span>
-<span class="fc" id="L55">            case UPGRADE_PREMIUM -&gt; this.recompensasService.concederRecompensasPremium(aluno);</span>
-<span class="fc" id="L56">            case CURSO_BONUS_BASICO -&gt; this.recompensasService.liberarCursosBonus(aluno);</span>
-<span class="fc" id="L57">            case REPROVADO_SEM_PROGRESSO, SEM_RECOMPENSA -&gt; Recompensa.vazia();</span>
+<span class="fc bfc" id="L82" title="All 4 branches covered.">        return switch (resultado) {</span>
+<span class="fc" id="L83">            case UPGRADE_PREMIUM -&gt; this.recompensasService.concederRecompensasPremium(aluno);</span>
+<span class="fc" id="L84">            case RECOMPENSA_RECURRENTE -&gt; this.recompensasService.concederRecompensasRecorrentes(aluno);</span>
+<span class="fc" id="L85">            case CURSO_BONUS_BASICO -&gt; this.recompensasService.liberarCursosBonus(aluno);</span>
+<span class="fc" id="L86">            case REPROVADO_SEM_PROGRESSO, SEM_RECOMPENSA -&gt; Recompensa.vazia();</span>
         };
     }
 
     private void aplicaNotaFinal(Matricula matricula, Double notaFinal){
-<span class="fc" id="L62">        var curso = matricula.getCurso();</span>
-<span class="fc" id="L63">        curso.setNotaFinal(notaFinal);</span>
-<span class="fc" id="L64">        curso.conclui();</span>
-<span class="fc" id="L65">        this.matriculaRepository.save(matricula);</span>
-<span class="fc" id="L66">    }</span>
+<span class="fc" id="L91">        var curso = matricula.getCurso();</span>
+<span class="fc" id="L92">        curso.setNotaFinal(notaFinal);</span>
+<span class="fc" id="L93">        curso.conclui();</span>
+<span class="fc" id="L94">        this.matriculaRepository.save(matricula);</span>
+<span class="fc" id="L95">    }</span>
 
     private void validaCursoNaoConcluido(Matricula matricula){
-<span class="fc" id="L69">        var curso = matricula.getCurso();</span>
-<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (curso.getStatus() == CursoStatus.CONCLUIDO){</span>
-<span class="fc" id="L71">            throw new CursoJaConcluidoException(&quot;O curso &quot; + curso.getName() + &quot; ja foi concluido&quot;);</span>
+<span class="fc" id="L98">        var curso = matricula.getCurso();</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (curso.getStatus() == CursoStatus.CONCLUIDO){</span>
+<span class="fc" id="L100">            throw new CursoJaConcluidoException(&quot;O curso &quot; + curso.getName() + &quot; ja foi concluido&quot;);</span>
         }
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L102">    }</span>
 
-    private ConcluirCursoResponseDTO montaResposta(Matricula matricula, Aluno aluno, Recompensa recompensa){
-<span class="fc" id="L76">        var cursosLiberados = recompensa.cursosLiberados()</span>
-<span class="fc" id="L77">                .stream()</span>
-<span class="fc" id="L78">                .map(this.matriculaMapper::toResponseDTO)</span>
-<span class="fc" id="L79">                .toList();</span>
+    private ConcluirCursoResponseDTO montaResposta(Matricula matricula, Aluno aluno, Recompensa recompensa, ResultadoProgressao resultado){
+<span class="fc" id="L105">        var cursosLiberados = recompensa.cursosLiberados()</span>
+<span class="fc" id="L106">                .stream()</span>
+<span class="fc" id="L107">                .map(this.matriculaMapper::toResponseDTO)</span>
+<span class="fc" id="L108">                .toList();</span>
 
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        var voucherDTO = recompensa.voucher() != null</span>
-<span class="fc" id="L82">                ? this.matriculaMapper.toVoucherResponseDTO(recompensa.voucher())</span>
-<span class="fc" id="L83">                : null;</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        var voucherDTO = recompensa.voucher() != null</span>
+<span class="fc" id="L111">                ? this.voucherMapper.toResponseDTO(recompensa.voucher())</span>
+<span class="fc" id="L112">                : null;</span>
 
-<span class="fc" id="L85">        return new ConcluirCursoResponseDTO(</span>
-<span class="fc" id="L86">                matricula.getId(),</span>
-<span class="fc" id="L87">                matricula.getCurso().getName(),</span>
-<span class="fc" id="L88">                matricula.getCurso().getStatus(),</span>
-<span class="fc" id="L89">                aluno.getPlano(),</span>
-<span class="fc" id="L90">                aluno.getMoedas(),</span>
+<span class="fc" id="L114">        return new ConcluirCursoResponseDTO(</span>
+<span class="fc" id="L115">                matricula.getId(),</span>
+<span class="fc" id="L116">                matricula.getCurso().getName(),</span>
+<span class="fc" id="L117">                matricula.getCurso().getStatus(),</span>
+<span class="fc" id="L118">                aluno.getPlano(),</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">                aluno.getMoedas(),</span>
                 cursosLiberados,
-                voucherDTO
+                voucherDTO,
+                resultado == ResultadoProgressao.UPGRADE_PREMIUM,
+<span class="fc" id="L123">                recompensa.moedasConcedidas()</span>
         );
     }
 
     private Aluno buscaAluno(UUID alunoId){
-<span class="fc" id="L97">        return this.alunoRepository.findById(alunoId)</span>
-<span class="fc" id="L98">                .orElseThrow(() -&gt; new AlunoNotFoundException(&quot;Aluno com id &quot; + alunoId + &quot; nao encontrado&quot;));</span>
+<span class="fc" id="L128">        return this.alunoRepository.findById(alunoId)</span>
+<span class="fc" id="L129">                .orElseThrow(() -&gt; new AlunoNotFoundException(&quot;Aluno com id &quot; + alunoId + &quot; nao encontrado&quot;));</span>
     }
 
     private Matricula buscaMatricula(UUID alunoId, UUID matriculaId){
-<span class="fc" id="L102">        return this.matriculaRepository.findByIdAndAlunoId(matriculaId, alunoId)</span>
-<span class="fc" id="L103">                .orElseThrow(() -&gt; new MatriculaNotFoundException(</span>
+<span class="fc" id="L133">        return this.matriculaRepository.findByIdAndAlunoId(matriculaId, alunoId)</span>
+<span class="fc" id="L134">                .orElseThrow(() -&gt; new MatriculaNotFoundException(</span>
                         &quot;Matricula &quot; + matriculaId + &quot; nao encontrada para o aluno &quot; + alunoId));
     }
 

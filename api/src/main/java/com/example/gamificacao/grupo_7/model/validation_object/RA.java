@@ -15,13 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @EqualsAndHashCode
 public class RA {
-
-    /**
-     * BLUE (correcao do RA null): anotacoes de coluna de um @Embedded so tem
-     * efeito DENTRO do @Embeddable - o @Column que estava em Aluno, ao lado do
-     * @Embedded, era silenciosamente ignorado pelo Hibernate e a coluna nascia
-     * sem NOT NULL, permitindo RA null no banco.
-     */
+    
     @Column(name = "ra", nullable = false)
     public String ra;
 

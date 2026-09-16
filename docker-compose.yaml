@@ -27,6 +27,8 @@ services:
       dockerfile: dockerfile
       target: dev
     container_name: devops_client
+    environment:
+      - API_PROXY_TARGET=http://api:8080
     develop:
       watch:
         - path: ./client/src

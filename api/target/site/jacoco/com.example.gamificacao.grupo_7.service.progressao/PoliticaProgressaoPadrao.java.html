@@ -8,25 +8,38 @@ import org.springframework.stereotype.Component;
 @Component
 <span class="fc" id="L9">public class PoliticaProgressaoPadrao implements PoliticaProgressao {</span>
 
+    /**
+     * Decisao central dos tres ciclos ATDD (TDD1, TDD2 e TDD3), derivada dos
+     * cenarios Given/When/Then da planilha Template_ATDD_Gamificacao.xlsx (aba pb).
+     * Cada bloco abaixo corresponde a um cenario de aceitacao de um ciclo RED-GREEN-BLUE.
+     */
     @Override
     public ResultadoProgressao avaliar(CursoStatus statusAposConclusao, Plano planoAluno, long cursosConcluidosAntes) {
-        // BDD3: nota &lt;= 7.0 reprova o curso: nada e liberado e o progresso nao avanca
-<span class="fc bfc" id="L14" title="All 2 branches covered.">        if (statusAposConclusao != CursoStatus.CONCLUIDO) {</span>
-<span class="fc" id="L15">            return ResultadoProgressao.REPROVADO_SEM_PROGRESSO;</span>
+        // TDD3 - GREEN: nota &lt;= 7.0 reprova o curso: nada e liberado e o progresso nao avanca
+<span class="fc bfc" id="L19" title="All 2 branches covered.">        if (statusAposConclusao != CursoStatus.CONCLUIDO) {</span>
+<span class="fc" id="L20">            return ResultadoProgressao.REPROVADO_SEM_PROGRESSO;</span>
+        }
+
+        // TDD5 - GREEN: a cada 12 cursos concluidos com nota &gt; 7.0 as recompensas
+        // do BDD2 se renovam para o aluno Premium: 3 moedas e voucher novamente
+<span class="fc" id="L25">        long totalConcluidos = cursosConcluidosAntes + 1;</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">        if (planoAluno == Plano.PREMIUM</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">                &amp;&amp; totalConcluidos % CursosParametros.CURSOS_NECESSARIOS_PREMIUM.getValor() == 0) {</span>
+<span class="fc" id="L28">            return ResultadoProgressao.RECOMPENSA_RECURRENTE;</span>
         }
 
         // As recompensas da planilha se aplicam apenas ao plano Basico
-<span class="fc bfc" id="L19" title="All 2 branches covered.">        if (planoAluno != Plano.BASICO) {</span>
-<span class="fc" id="L20">            return ResultadoProgressao.SEM_RECOMPENSA;</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        if (planoAluno != Plano.BASICO) {</span>
+<span class="fc" id="L33">            return ResultadoProgressao.SEM_RECOMPENSA;</span>
         }
 
-        // BDD2: concluindo o 12o curso (11 concluidos antes) com nota &gt; 7.0
-<span class="fc bfc" id="L24" title="All 2 branches covered.">        if (cursosConcluidosAntes &gt;= CursosParametros.LIMITE_CURSOS_UPGRADE_PREMIUM.getValor()) {</span>
-<span class="fc" id="L25">            return ResultadoProgressao.UPGRADE_PREMIUM;</span>
+        // TDD2 - GREEN: concluindo o 12o curso (11 concluidos antes) com nota &gt; 7.0
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (cursosConcluidosAntes &gt;= CursosParametros.LIMITE_CURSOS_UPGRADE_PREMIUM.getValor()) {</span>
+<span class="fc" id="L38">            return ResultadoProgressao.UPGRADE_PREMIUM;</span>
         }
 
-        // BDD1: menos de 11 cursos concluidos com nota &gt; 7.0
-<span class="fc" id="L29">        return ResultadoProgressao.CURSO_BONUS_BASICO;</span>
+        // TDD1 - GREEN: menos de 11 cursos concluidos com nota &gt; 7.0
+<span class="fc" id="L42">        return ResultadoProgressao.CURSO_BONUS_BASICO;</span>
     }
 
 }
