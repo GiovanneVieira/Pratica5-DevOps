@@ -37,6 +37,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes de orquestracao do caso de uso de conclusao de curso (ciclos ATDD
+ * TDD1/TDD2/TDD3): a PoliticaProgressao e o RecompensasService sao mockados
+ * para verificar apenas a coordenacao - quem decide e a politica, quem concede
+ * e o servico de recompensas. As regras em si sao cobertas por
+ * PoliticaProgressaoPadraoTest e RecompensasServiceTest; o fluxo HTTP completo
+ * por MatriculaFlowIntegrationTest.
+ */
 @Slf4j
 @ExtendWith(MockitoExtension.class)
 public class ConclusaoCursoServiceTest {

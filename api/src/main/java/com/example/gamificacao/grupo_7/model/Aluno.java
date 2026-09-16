@@ -33,7 +33,6 @@ public class Aluno {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "ra", nullable = false)
     @Embedded
     private RA ra;
 

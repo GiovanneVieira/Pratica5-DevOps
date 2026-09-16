@@ -12,6 +12,8 @@ import java.util.UUID;
 public interface AlunoRepository extends JpaRepository<Aluno, UUID> {
     boolean existsByEmail(String email);
 
+    Optional<Aluno> findByEmail(String email);
+
     @Query("select a from aluno a where a.ra = :ra")
     Optional<Aluno> findByRa(RA ra);
 

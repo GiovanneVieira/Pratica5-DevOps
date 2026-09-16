@@ -22,8 +22,15 @@ import java.util.List;
 
 /**
  * Responsavel por conceder as recompensas de progressao definidas na planilha
- * de BDDs: liberacao de cursos bonus (BDD1) e o pacote de upgrade para Premium
- * com 3 cursos, 3 moedas e voucher para projetos reais (BDD2).
+ * Template_ATDD_Gamificacao.xlsx (aba pb):
+ *
+ * TDD1 / BDD1 - liberacao de 3 cursos bonus ao concluir curso com nota > 7.0
+ *               por aluno basico com menos de 11 cursos concluidos;
+ * TDD2 / BDD2 - pacote de upgrade para Premium no 12o curso concluido com
+ *               nota > 7.0: 3 cursos, 3 moedas e voucher para projetos reais.
+ *
+ * Cada metodo publico corresponde ao passo GREEN de um dos ciclos ATDD:
+ * a PoliticaProgressao decide qual recompensa conceder e este servico a aplica.
  */
 @Service
 @RequiredArgsConstructor
@@ -42,10 +49,23 @@ public class RecompensasService {
     private final VoucherMapper voucherMapper;
     private final MatriculaMapper matriculaMapper;
 
+    /**
+     * TDD1 - GREEN / BLUE:
+     * "Entao o sistema deve liberar o acesso a 3 novos cursos E manter a
+     * assinatura no plano basico" - cria 3 matriculas com status INICIADO,
+     * sem tocar em plano, moedas ou voucher.
+     */
     public Recompensa liberarCursosBonus(Aluno aluno){
         return new Recompensa(this.matricularCursos(aluno, this.criaCursosBonus()), null);
     }
 
+    /**
+     * TDD2 - GREEN / BLUE:
+     * "Entao a assinatura deve ser alterada para Premium E conceder 3 cursos,
+     * 3 moedas e voucher para projetos reais" - aplica o upgrade, credita as
+     * moedas, emite o voucher (VALIDO, expira em 7 dias) e matricula os 3
+     * cursos bonus.
+     */
     public Recompensa concederRecompensasPremium(Aluno aluno){
         var recompensas = this.montarRecompensasPremium(aluno);
         this.aplicarUpgradePremium(aluno, recompensas.moedas());

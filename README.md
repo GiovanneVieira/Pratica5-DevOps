@@ -27,6 +27,7 @@ Projeto desenvolvido como parte da disciplina de Prática 5 de DevOps. Trata-se 
   - [Passo 3: Frontend (React + Vite)](#passo-3-frontend-react--vite)
 - [Como Conectar ao PostgreSQL pelo IntelliJ IDEA](#-como-conectar-ao-postgresql-pelo-intellij-idea)
 - [Endpoints da API e Exemplos de Uso](#-endpoints-da-api-e-exemplos-de-uso)
+- [Metodologia ATDD — Passo a Passo dos TDDs](#-metodologia-atdd--passo-a-passo-dos-tdds)
 - [Estrutura de Pastas do Repositório](#-estrutura-de-pastas-do-repositório)
 - [Resolução de Problemas (Troubleshooting)](#-resolução-de-problemas-troubleshooting)
 
@@ -112,8 +113,8 @@ Antes de iniciar os containers ou a compilação, crie os arquivos de ambiente b
 
 ### Linux / macOS / Git Bash:
 ```bash
-cp .env.api.example .env.api
-cp .env.client.example .env.client
+cp .env.client.api.example .env.client.api
+cp .env.client.client.example .env.client.client
 ```
 
 ### Windows (PowerShell):
@@ -509,7 +510,7 @@ Registra um novo aluno no banco de dados (plano inicial: `BASICO`, 0 moedas).
   {
     "id": "e4f8a32b-9e0f-48d6-b0ad-5b43a9f5d1e2",
     "name": "João da Silva",
-    "ra": {"ra": "2026123"},
+    "ra": "261234",
     "plano": "BASICO"
   }
   ```
@@ -581,6 +582,100 @@ Conclui uma matrícula aplicando as regras de progressão da planilha `Template_
     "voucher": null
   }
   ```
+
+---
+
+### 6. Login
+Valida credenciais comparando a senha do input com o hash **BCrypt** armazenado no cadastro (`passwordEncoder.matches`). Não usa sessão nem token — retorna os dados do aluno quando as credenciais são válidas e `401 Unauthorized` caso contrário (mensagem genérica, sem revelar se o erro foi no email ou na senha).
+- **Método**: `POST`
+- **URL**: `http://localhost:8080/login`
+- **Body**:
+  ```json
+  {
+    "email": "joao.silva@email.com",
+    "password": "123456"
+  }
+  ```
+- **Exemplo via cURL**:
+  ```bash
+  curl -X POST http://localhost:8080/login \
+    -H "Content-Type: application/json" \
+    -d "{\"email\": \"joao.silva@email.com\", \"password\": \"123456\"}"
+  ```
+- **Resposta esperada** (`200 OK`):
+  ```json
+  {
+    "id": "e4f8a32b-9e0f-48d6-b0ad-5b43a9f5d1e2",
+    "name": "João da Silva",
+    "ra": "261234",
+    "plano": "BASICO"
+  }
+  ```
+- **Credenciais inválidas** (`401 Unauthorized`):
+  ```json
+  {
+    "message": "Credenciais invalidas",
+    "status": "UNAUTHORIZED",
+    "path": "/login",
+    "timestamp": "2026-09-15T23:59:00.000Z"
+  }
+  ```
+---
+
+## 🧪 Metodologia ATDD — Passo a Passo dos TDDs
+
+A aplicação foi desenvolvida com **ATDD (Acceptance Test-Driven Development)**: os cenários de aceitação da planilha `Template_ATDD_Gamificacao.xlsx` (aba `pb`) foram transformados em testes **antes** da implementação, e cada funcionalidade evoluiu no ciclo **RED → GREEN → BLUE**:
+
+- **RED** — escreve-se o teste de aceitacao do cenario e ele falha (a regra ainda nao existe);
+- **GREEN** — implementa-se o minimo para o teste passar;
+- **BLUE (REFACTOR)** — refatora-se o codigo mantendo os testes verdes (extracao de camadas, SOLID, divisao de responsabilidades).
+
+Cada teste carrega em javadoc o cenário Given/When/Then correspondente, e cada ponto do código onde a regra vive está marcado com comentários `TDD1 - GREEN`, `TDD2 - BLUE`, etc.
+
+### TDD1 — Liberação de 3 novos cursos (nota > 7,0, aluno básico com menos de 11 concluídos)
+
+**Cenário (planilha):** *Dado* um aluno com assinatura básica ativa *E* com menos de 11 cursos concluídos *Quando* o aluno conclui um curso *E* obtém nota final superior a 7,0 *Então* o sistema deve liberar o acesso a 3 novos cursos *E* manter a assinatura no plano básico.
+
+1. **RED**: teste de aceitação criado para "concluir curso com nota 8,0 deve liberar 3 cursos e manter plano básico" — falhou porque não existia regra de progressão (nada era liberado na conclusão).
+2. **GREEN**: implementada a decisão `concluidosAntes < 11 && nota > 7,0 → liberar 3 cursos com status INICIADO` e a transição `Curso.conclui()` (nota > 7,0 → `CONCLUIDO`).
+3. **BLUE**: a regra saiu do orquestrador e virou a política `PoliticaProgressaoPadrao.avaliar()` (retorno `CURSO_BONUS_BASICO`), e a concessão dos 3 cursos ficou em `RecompensasService.liberarCursosBonus()` — o orquestrador `ConclusaoCursoService` apenas coordena.
+
+**Onde está hoje:** `service/progressao/PoliticaProgressaoPadrao.java` (bloco `TDD1 - GREEN`), `service/RecompensasService.java` (`liberarCursosBonus`).
+**Testes:** `PoliticaProgressaoPadraoTest.bdd1_...`, `RecompensasServiceTest.liberarCursosBonus...`, `MatriculaFlowIntegrationTest.bdd1_...` (HTTP de ponta a ponta).
+
+### TDD2 — Upgrade para Premium no 12º curso (3 cursos + 3 moedas + voucher)
+
+**Cenário (planilha):** *Dado* um aluno com plano básico e 11 cursos concluídos *E* com todas as avaliações validadas *Quando* o aluno conclui o seu 12º curso *E* obtém nota final superior a 7,0 *Então* a assinatura deve ser alterada para "Premium" *E* conceder 3 cursos, 3 moedas e voucher para projetos reais.
+
+1. **RED**: teste de aceitação criado para "12º curso concluído com nota > 7,0 deve virar Premium com 3 cursos, 3 moedas e voucher" — falhou porque o upgrade não existia (plano permanecia básico, sem moedas e sem voucher).
+2. **GREEN**: implementada a decisão `concluidosAntes >= 11 && nota > 7,0 → UPGRADE_PREMIUM` e o pacote de recompensas (plano `PREMIUM`, `moedas += 3`, voucher `VALIDO` com validade de 7 dias, 3 cursos `INICIADO`).
+3. **BLUE**: decisões de limite isoladas em `PoliticaProgressaoPadrao` (constantes `CursosParametros.LIMITE_CURSOS_UPGRADE_PREMIUM`/`CURSOS_NECESSARIOS_PREMIUM`), montagem do pacote em `RecompensasService.concederRecompensasPremium()` reaproveitando o value object `RecompensasPremiumDTO` (voucher + cursos + moedas).
+
+**Onde está hoje:** `service/progressao/PoliticaProgressaoPadrao.java` (bloco `TDD2 - GREEN`), `service/RecompensasService.java` (`concederRecompensasPremium`).
+**Testes:** `PoliticaProgressaoPadraoTest.bdd2_...`, `RecompensasServiceTest.concederRecompensasPremium...`, `MatriculaFlowIntegrationTest.bdd2_...`.
+
+### TDD3 — Nota ≤ 7,0 não libera nada nem progride o plano
+
+**Cenário (planilha):** *Dado* um aluno com assinatura básica ativa *E* matriculado em um curso da grade *Quando* o aluno conclui o curso *E* obtém nota final igual ou inferior a 7,0 *Então* nenhum curso adicional deve ser liberado *E* o progresso para o plano Premium não deve ser incrementado.
+
+1. **RED**: teste de aceitação criado para "nota 7,0 não libera curso adicional nem incrementa progresso" — falhou porque a primeira versão da conclusão marcava qualquer curso como concluído, contabilizando progresso indevidamente.
+2. **GREEN**: a transição `Curso.conclui()` passou a reprovar com nota ≤ 7,0 (`REPROVADO`), o que naturalmente bloqueia bônus e progresso (a nota exatamente 7,0 reprova porque os cenários TDD1/TDD2 exigem nota "superior a 7,0").
+3. **BLUE**: a reprovação flui como `ResultadoProgressao.REPROVADO_SEM_PROGRESSO` na política, e o orquestrador responde com recompensa vazia (`Recompensa.vazia()`) — sem cursos, sem moedas, sem voucher, sem tocar no plano.
+
+**Onde está hoje:** `model/Curso.java` (`conclui()`), `service/progressao/PoliticaProgressaoPadrao.java` (bloco `TDD3 - GREEN`).
+**Testes:** `CursoTest` (nota 7,0 e 6,5 → `REPROVADO`; 7,1 → `CONCLUIDO`), `PoliticaProgressaoPadraoTest.bdd3_...`, `MatriculaFlowIntegrationTest.bdd3_...` (notas 7,0 e 6,5).
+
+### Mapa de cobertura dos cenários
+
+| Camada | TDD1 | TDD2 | TDD3 |
+|---|---|---|---|
+| Domínio (`CursoTest`) | — | — | nota ≤ 7,0 reprova |
+| Regra (`PoliticaProgressaoPadraoTest`) | `bdd1_...` | `bdd2_...` | `bdd3_...` |
+| Recompensas (`RecompensasServiceTest`) | 3 cursos INICIADO | Premium + moedas + voucher | — |
+| Orquestração (`ConclusaoCursoServiceTest`) | chama `liberarCursosBonus` | chama `concederRecompensasPremium` | nenhuma recompensa |
+| Integração HTTP (`MatriculaFlowIntegrationTest`) | fluxo completo | fluxo completo | fluxo completo |
+
+> **Trajetória histórica:** os três ciclos nasceram na primeira entrega como testes de unidade diretos sobre a entidade `Aluno` (que acumulava as regras de propósito, documentado no próprio código da época). Na refatoração para camadas MVC a lógica migrou para os services, e na refatoração SOLID final foi dividida em `PoliticaProgressao` (decisão), `RecompensasService` (concessão) e `ConclusaoCursoService` (orquestração) — com os testes de aceitação mantidos verdes em cada etapa, como manda o ATDD.
 
 ---
 

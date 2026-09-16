@@ -7,6 +7,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Testes de aceitacao da regra de decisao dos tres ciclos ATDD, derivados dos
+ * cenarios Given/When/Then da planilha Template_ATDD_Gamificacao.xlsx (aba pb).
+ * Teste puro, sem mocks: aplica notas reais via Curso.conclui() e verifica o
+ * ResultadoProgressao esperado de cada cenario.
+ */
 public class PoliticaProgressaoPadraoTest {
 
     private final PoliticaProgressao politica = new PoliticaProgressaoPadrao();
@@ -21,6 +27,16 @@ public class PoliticaProgressaoPadraoTest {
         return curso.getStatus();
     }
 
+    /**
+     * TDD1 - cenario de aceitacao (RED do ciclo original):
+     *
+     * Dado um aluno com assinatura basica ativa
+     * E com menos de 11 cursos concluidos
+     * Quando o aluno conclui um curso
+     * E obtem nota final superior a 7,0
+     * Entao o sistema deve liberar o acesso a 3 novos cursos
+     * E manter a assinatura no plano basico
+     */
     @Test
     void bdd1_alunoBasicoComMenosDe11ConcluidosENotaSuperiorASeteDeveRetornarCursoBonusBasico(){
         assertEquals(ResultadoProgressao.CURSO_BONUS_BASICO,
@@ -31,6 +47,16 @@ public class PoliticaProgressaoPadraoTest {
                 this.politica.avaliar(this.statusAposConcluir(10.0), Plano.BASICO, 10));
     }
 
+    /**
+     * TDD2 - cenario de aceitacao (RED do ciclo original):
+     *
+     * Dado um aluno com plano basico e 11 cursos concluidos
+     * E com todas as avaliacoes validadas
+     * Quando o aluno conclui o seu 12o curso
+     * E obtem nota final superior a 7,0
+     * Entao a assinatura deve ser alterada para "Premium"
+     * E conceder 3 cursos, 3 moedas e voucher para projetos reais
+     */
     @Test
     void bdd2_alunoBasicoCom11ConcluidosConcluindo12oComNotaSuperiorASeteDeveRetornarUpgradePremium(){
         assertEquals(ResultadoProgressao.UPGRADE_PREMIUM,
@@ -39,6 +65,16 @@ public class PoliticaProgressaoPadraoTest {
                 this.politica.avaliar(this.statusAposConcluir(9.5), Plano.BASICO, 15));
     }
 
+    /**
+     * TDD3 - cenario de aceitacao (RED do ciclo original):
+     *
+     * Dado um aluno com assinatura basica ativa
+     * E matriculado em um curso da grade
+     * Quando o aluno conclui o curso
+     * E obtem nota final igual ou inferior a 7,0
+     * Entao nenhum curso adicional deve ser liberado
+     * E o progresso para o plano Premium nao deve ser incrementado
+     */
     @Test
     void bdd3_notaIgualOuInferiorASeteDeveRetornarReprovadoSemProgresso(){
         assertEquals(ResultadoProgressao.REPROVADO_SEM_PROGRESSO,
@@ -49,6 +85,11 @@ public class PoliticaProgressaoPadraoTest {
                 this.politica.avaliar(this.statusAposConcluir(6.5), Plano.PREMIUM, 3));
     }
 
+    /**
+     * Caso de borda fora da planilha: aluno ja Premium que conclui curso com
+     * nota superior a 7,0 nao recebe novas recompensas (as recompensas dos
+     * cenarios TDD1/TDD2 se aplicam apenas ao plano basico).
+     */
     @Test
     void alunoPremiumAprovadoDeveRetornarSemRecompensa(){
         assertEquals(ResultadoProgressao.SEM_RECOMPENSA,

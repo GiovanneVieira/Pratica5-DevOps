@@ -27,9 +27,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * Testes de integracao dos cenarios BDD da planilha Template_ATDD_Gamificacao.xlsx,
- * exercitando o fluxo HTTP completo (aluno -> matricula -> conclusao) contra
- * PostgreSQL real via Testcontainers.
+ * Testes de aceitacao de integracao dos ciclos ATDD (planilha
+ * Template_ATDD_Gamificacao.xlsx, aba pb): exercitam o fluxo HTTP completo
+ * (criar aluno -> matricular -> concluir com nota) contra PostgreSQL real via
+ * Testcontainers, verificando os efeitos de cada cenario de ponta a ponta.
+ *
+ * Cenários cobertos (TDD1, TDD2 e TDD3) documentados em cada teste abaixo.
  */
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -90,6 +93,16 @@ public class MatriculaFlowIntegrationTest extends AbstractIntegrationTest {
                 .body(AlunoResponseDTO.class);
     }
 
+    /**
+     * TDD1 - cenario de aceitacao (integracao de ponta a ponta):
+     *
+     * Dado um aluno com assinatura basica ativa
+     * E com menos de 11 cursos concluidos (5 concluidos previamente)
+     * Quando o aluno conclui um curso
+     * E obtem nota final superior a 7,0
+     * Entao o sistema deve liberar o acesso a 3 novos cursos
+     * E manter a assinatura no plano basico
+     */
     @Test
     void bdd1_alunoBasicoComMenosDe11ConcluidosAoConcluirComNotaSuperiorASeteLibera3CursosEManterPlanoBasico(){
         var alunoId = this.criaAluno("bdd1@teste.com");
@@ -115,6 +128,16 @@ public class MatriculaFlowIntegrationTest extends AbstractIntegrationTest {
         assertEquals(Plano.BASICO, this.buscaAluno(alunoId).plano());
     }
 
+    /**
+     * TDD2 - cenario de aceitacao (integracao de ponta a ponta):
+     *
+     * Dado um aluno com plano basico e 11 cursos concluidos
+     * E com todas as avaliacoes validadas
+     * Quando o aluno conclui o seu 12o curso
+     * E obtem nota final superior a 7,0
+     * Entao a assinatura deve ser alterada para "Premium"
+     * E conceder 3 cursos, 3 moedas e voucher para projetos reais
+     */
     @Test
     void bdd2_alunoBasicoAoConcluir12oCursoComNotaSuperiorASeteViraPremiumCom3Cursos3MoedasEVoucher(){
         var alunoId = this.criaAluno("bdd2@teste.com");
@@ -140,11 +163,25 @@ public class MatriculaFlowIntegrationTest extends AbstractIntegrationTest {
         assertEquals(Plano.PREMIUM, this.buscaAluno(alunoId).plano());
     }
 
+    /**
+     * TDD3 - cenario de aceitacao (integracao de ponta a ponta), nota igual a 7,0:
+     *
+     * Dado um aluno com assinatura basica ativa
+     * E matriculado em um curso da grade
+     * Quando o aluno conclui o curso
+     * E obtem nota final igual ou inferior a 7,0
+     * Entao nenhum curso adicional deve ser liberado
+     * E o progresso para o plano Premium nao deve ser incrementado
+     */
     @Test
     void bdd3_alunoAoConcluirComNotaIgualASeteNaoLiberaCursosNemProgredirParaPremium(){
         this.verificaCenarioNotaInsuficiente("bdd3a@teste.com", 7.0);
     }
 
+    /**
+     * TDD3 - cenario de aceitacao (integracao de ponta a ponta), nota inferior a 7,0:
+     * mesmo cenario do teste anterior, cobrindo o outro limite da regra.
+     */
     @Test
     void bdd3_alunoAoConcluirComNotaInferiorASeteNaoLiberaCursosNemProgredirParaPremium(){
         this.verificaCenarioNotaInsuficiente("bdd3b@teste.com", 6.5);
