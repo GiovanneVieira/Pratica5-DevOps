@@ -2,6 +2,7 @@ package com.example.gamificacao.grupo_7.exception;
 
 import com.example.gamificacao.grupo_7.exception.aluno.AlunoNotFoundException;
 import com.example.gamificacao.grupo_7.exception.aluno.EmailAlreadyExistsException;
+import com.example.gamificacao.grupo_7.exception.login.AuthenticationFailedException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException ex, HttpServletRequest request){
         return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
+    }
+
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationFailed(AuthenticationFailedException ex, HttpServletRequest request){
+        return buildErrorResponse(ex, HttpStatus.UNAUTHORIZED, request);
     }
 
     @ExceptionHandler(BusinessException.class)

@@ -74,6 +74,15 @@ public class RecompensasServiceTest {
         when(this.matriculaRepository.save(any(Matricula.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
+    /**
+     * TDD1 - GREEN (passo "Entao" do cenario):
+     *
+     * Entao o sistema deve liberar o acesso a 3 novos cursos
+     * E manter a assinatura no plano basico
+     *
+     * Verifica: 3 matriculas criadas com status INICIADO, nenhum voucher emitido
+     * e nenhuma alteracao de plano/moedas no aluno.
+     */
     @Test
     void liberarCursosBonusDeveCriarTresMatriculasIniciadasSemVoucher(){
         var aluno = this.buildAlunoBasico();
@@ -89,6 +98,15 @@ public class RecompensasServiceTest {
         verify(this.alunoRepository, never()).save(any());
     }
 
+    /**
+     * TDD2 - GREEN (passo "Entao" do cenario):
+     *
+     * Entao a assinatura deve ser alterada para "Premium"
+     * E conceder 3 cursos, 3 moedas e voucher para projetos reais
+     *
+     * Verifica: plano PREMIUM aplicado e persistido, 3 moedas creditadas,
+     * voucher VALIDO emitido e 3 matriculas de cursos bonus criadas.
+     */
     @Test
     void concederRecompensasPremiumDeveAplicarPlanoMoedasVoucherECursos(){
         var aluno = this.buildAlunoBasico();

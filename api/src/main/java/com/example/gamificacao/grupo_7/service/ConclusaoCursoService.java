@@ -21,9 +21,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 /**
- * Orquestra o caso de uso de conclusao de curso: valida a matricula, aplica a nota,
- * consulta a politica de progressao (regras BDD da planilha) e concede a recompensa
- * correspondente. Nao conhece os detalhes de cada regra nem de cada recompensa.
+ * Orquestra o caso de uso de conclusao de curso, ponto de convergencia dos tres
+ * ciclos ATDD (TDD1, TDD2 e TDD3) da planilha Template_ATDD_Gamificacao.xlsx:
+ * valida a matricula, aplica a nota, consulta a PoliticaProgressao (quem conhece
+ * as regras de cada cenario) e concede a recompensa correspondente via
+ * RecompensasService. Nao conhece os detalhes de nenhuma regra nem recompensa.
+ *
+ * Fluxo em comum aos cenarios:
+ *   Dado um aluno com assinatura basica ativa e uma matricula em curso da grade
+ *   Quando o aluno conclui o curso com uma nota final
+ *   Entao a PoliticaProgressao decide o resultado e as recompensas sao aplicadas
  */
 @Service
 @RequiredArgsConstructor
